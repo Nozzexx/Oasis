@@ -1,0 +1,7 @@
+OASIS
+
+OASIS is an open-source application built to allow users to easily review data taken from the NASA Exoplanet API. 
+OASIS utilizes an algorithm to provide a Habitability Score for each exoplanet based on available data.
+OASIS also allows the user to preview a 3D model of each exoplanet including size, scale orbit, rotation and more.
+
+WIP
