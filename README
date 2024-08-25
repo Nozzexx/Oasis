@@ -1,4 +1,4 @@
-# OASIS 🌍🛰️
+# OASIS 🌍 🛰️
 
 **O**rbital **A**nalysis and **S**pace **I**nformation **S**ystem
 
@@ -99,43 +99,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## ⚠️ Disclaimer
 
 OASIS is under active development and its features are subject to change. Not all described functionalities may be implemented in the current version.
-
----
-
-<details>
-<summary>🔍 Expand for a detailed feature list</summary>
-
-## Detailed Feature List
-
-### Data Ingestion and Processing
-- API integration with NASA, NOAA, and space-track.org
-- Data cleaning and normalization pipelines
-- Outlier detection and handling algorithms
-- Data fusion techniques for combining multiple sources
-
-### Near-Earth Space Environment Analysis
-- Machine learning models for space weather prediction
-- Orbital debris tracking and collision risk assessment
-- Radiation exposure models for different orbital altitudes
-- Atmospheric drag calculations and orbit decay prediction
-
-### Exoplanet Habitability Analysis
-- Exoplanet detection data processing
-- Stellar classification and characterization
-- Planetary mass and radius estimation techniques
-- Habitable zone calculations based on stellar properties
-- Atmospheric composition analysis (where data is available)
-
-### Data Visualization
-- 3D rendering of near-Earth space environment
-- Interactive charts for exoplanet data exploration
-- Time-series visualizations of space weather patterns
-- Comparative visualization tools for exoplanet characteristics
-
-### User Interface
-- Customizable dashboard layouts
-- Real-time data updates and notifications
-- Advanced search and filtering capabilities
-- Data export options for further analysis
-
-</details>
