@@ -44,7 +44,7 @@ public class App extends Application {
     private static final int DEFAULT_WIDTH = 1600;
     private static final int DEFAULT_HEIGHT = 900;
     private static final String APP_NAME = "OASIS";
-    private static final String VERSION = "0.1.1a";
+    private static final String VERSION = "0.0.1";
     private static final int SIDEBAR_WIDTH = 250;
 
     private static final double EXPANDED_BUTTON_HEIGHT = 40;
