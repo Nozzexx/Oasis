@@ -1,0 +1,51 @@
+.toggle-button {
+    -fx-background-color: transparent;
+    background-color: transparent;
+    -fx-padding: 5px;
+    padding: 5px;
+}
+
+.toggle-button:hover {
+    -fx-background-color: #537297;
+    background-color: #537297;
+}
+
+.button-outlined {
+    -fx-background-color: #2e3440;
+    background-color: #2e3440;
+    -fx-border-color: #30363d;
+    border-color: #30363d;
+    -fx-text-fill: white;
+    color: white;
+}
+
+.button-outlined:hover, 
+.button-outlined:selected {
+    -fx-background-color: #537297;
+    background-color: #537297;
+}
+
+.icon-button {
+    -fx-background-color: #2e3440;
+    background-color: #2e3440;
+    -fx-border-color: #30363d;
+    border-color: #30363d;
+    -fx-text-fill: white;
+    color: white;
+}
+
+.icon-button:hover, 
+.icon-button:selected {
+    -fx-background-color: #537297;
+    background-color: #537297;
+}
+
+.accent {
+    -fx-border-color: #5e81ac;
+    border-color: #5e81ac;
+}
+
+.version-label {
+    -fx-text-fill: #ffffff;
+    color: #ffffff;
+}

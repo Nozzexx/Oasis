@@ -25,7 +25,7 @@ public class SplashScreen extends Preloader {
     private ProgressBar progressBar;
     private Label progressText;
     private static final String APP_NAME = "OASIS";
-    private static final String VERSION = "0.1.1a";
+    private static final String VERSION = "0.0.1";
     
     // Adjust these values to change the padding of title and version text
     private static final int TITLE_PADDING_LEFT = 20;
