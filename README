@@ -1,96 +1,141 @@
-OASIS (Orbital Analysis and Space Information System)
-Project Overview
+# OASIS 🌍🛰️
+
+**O**rbital **A**nalysis and **S**pace **I**nformation **S**ystem
+
+## 🚀 Project Overview
+
 OASIS is a comprehensive Java-based application that combines near-Earth space environment assessment with exoplanet habitability prediction. This tool aims to provide valuable insights for space operations, satellite management, and exoplanet research using data from various open-source datasets including NASA, NOAA, and space-track.org.
-Note: This README outlines the full scope of possibilities for OASIS. The actual implemented features may vary based on development priorities and resources.
-Key Features
-1. Data Ingestion and Processing
 
--Import data from multiple sources:
+> **Note:** This README outlines the full scope of possibilities for OASIS. The actual implemented features may vary based on development priorities and resources.
 
---NASA's Exoplanet Archive API
---NASA's space environment datasets
---NOAA's Space Weather Prediction Center
---Space-track.org orbital debris data
+## ✨ Key Features
 
--Clean, normalize, and combine data from various sources
--Handle missing values and outliers
+### 1. Data Ingestion and Processing
+- Import data from multiple sources:
+  - NASA's Exoplanet Archive API
+  - NASA's space environment datasets
+  - NOAA's Space Weather Prediction Center
+  - Space-track.org orbital debris data
+- Clean, normalize, and combine data from various sources
+- Handle missing values and outliers
 
-2. Near-Earth Space Environment Analysis
+### 2. Near-Earth Space Environment Analysis
+- Space environment rating model considering:
+  - Space weather conditions
+  - Orbital debris density and distribution
+  - Radiation levels
+  - Atmospheric drag for different orbital altitudes
+- Predict space environment conditions
 
--Space environment rating model considering:
+### 3. Exoplanet Habitability Analysis
+- Habitability scoring model considering:
+  - Planet size and mass
+  - Orbital characteristics
+  - Star type and characteristics
+  - Presence of atmosphere (if detectable)
+- Predict potential habitability of exoplanets
 
---Space weather conditions
---Orbital debris density and distribution
---Radiation levels
---Atmospheric drag for different orbital altitudes
+### 4. Data Visualization
+- Interactive visualizations of near-Earth space environments
+- Rating heatmap for different orbital regions
+- Visualizations of exoplanet systems
+- Habitability heatmap of known exoplanets
+- Comparative charts of exoplanet characteristics
 
--Predict space environment conditions
+### 5. User Interface
+- JavaFX-based GUI for intuitive interaction with the application
+- Dashboard for overview of key space environment and exoplanet data
+- Detailed views for in-depth analysis of specific datasets
 
-3. Exoplanet Habitability Analysis
+## 🚀 Potential Extensions
 
--Habitability scoring model considering:
+- Predict characteristics of undiscovered exoplanets
+- Simulate exoplanet atmospheric conditions
+- Optimize satellite constellation configurations
+- Create a risk assessment module for space missions or satellite hardware
 
---Planet size and mass
---Orbital characteristics
---Star type and characteristics
---Presence of atmosphere (if detectable)
+## 🛠️ Technologies
 
--Predict potential habitability of exoplanets
+- Java 17+
+- JavaFX 17+
+- Maven
+- JSON processing libraries (e.g., Jackson)
+- Charting libraries (e.g., JFreeChart or JavaFX built-in charts)
 
-4. Data Visualization
+## 📥 Installation and Usage
 
--Interactive visualizations of near-Earth space environments
--Rating heatmap for different orbital regions
--Visualizations of exoplanet systems
--Habitability heatmap of known exoplanets
--Comparative charts of exoplanet characteristics
+1. Ensure you have Java Development Kit (JDK) 17 or later installed.
 
-5. User Interface
+2. Clone the repository:
+   ```bash
+   git clone https://github.com/your-organization/OASIS.git
+   cd OASIS
+   ```
 
--JavaFX-based GUI for intuitive interaction with the application
--Dashboard for overview of key space environment and exoplanet data
--Detailed views for in-depth analysis of specific datasets
+3. Build the project using Maven:
+   ```bash
+   mvn clean install
+   ```
 
-Potential Extensions
+4. Run the application:
+   ```bash
+   mvn javafx:run
+   ```
 
--Predict characteristics of undiscovered exoplanets
--Simulate exoplanet atmospheric conditions
--Optimize satellite constellation configurations
--Create a risk assessment module for space missions or satellite hardware
+## 🤝 Contributing
 
-Technologies
+We welcome contributions to OASIS! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to make contributions.
 
--Java 17+
--JavaFX 17+
--Maven
--JSON processing libraries (e.g., Jackson)
--Charting libraries (e.g., JFreeChart or JavaFX built-in charts)
+## 📄 License
 
-Installation and Usage
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
--Ensure you have Java Development Kit (JDK) 17 or later installed.
--Clone the repository:
---Copygit clone https://github.com/your-organization/OASIS.git
---cd OASIS
+## 🙏 Acknowledgments
 
--Build the project using Maven:
---Copymvn clean install
+- NASA for providing open-source exoplanet and space environment data
+- NOAA for space weather prediction data
+- space-track.org for orbital debris data
 
--Run the application:
---Copymvn javafx:run
+## ⚠️ Disclaimer
 
-
-Contributing
-We welcome contributions to OASIS! Please read our CONTRIBUTING.md file for guidelines on how to make contributions.
-
-License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
-
-Acknowledgments
-
-NASA for providing open-source exoplanet and space environment data
-NOAA for space weather prediction data
-space-track.org for orbital debris data
-
-Disclaimer
 OASIS is under active development and its features are subject to change. Not all described functionalities may be implemented in the current version.
+
+---
+
+<details>
+<summary>🔍 Expand for a detailed feature list</summary>
+
+## Detailed Feature List
+
+### Data Ingestion and Processing
+- API integration with NASA, NOAA, and space-track.org
+- Data cleaning and normalization pipelines
+- Outlier detection and handling algorithms
+- Data fusion techniques for combining multiple sources
+
+### Near-Earth Space Environment Analysis
+- Machine learning models for space weather prediction
+- Orbital debris tracking and collision risk assessment
+- Radiation exposure models for different orbital altitudes
+- Atmospheric drag calculations and orbit decay prediction
+
+### Exoplanet Habitability Analysis
+- Exoplanet detection data processing
+- Stellar classification and characterization
+- Planetary mass and radius estimation techniques
+- Habitable zone calculations based on stellar properties
+- Atmospheric composition analysis (where data is available)
+
+### Data Visualization
+- 3D rendering of near-Earth space environment
+- Interactive charts for exoplanet data exploration
+- Time-series visualizations of space weather patterns
+- Comparative visualization tools for exoplanet characteristics
+
+### User Interface
+- Customizable dashboard layouts
+- Real-time data updates and notifications
+- Advanced search and filtering capabilities
+- Data export options for further analysis
+
+</details>
