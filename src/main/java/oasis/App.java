@@ -54,6 +54,7 @@ public class App extends Application {
     private BorderPane sidebar;
     private ToggleButton toggleButton;
     private TextField searchField;
+    private String selectedMenuItem = "Dashboard"; // Default selection
 
     @Override
     public void init() throws Exception {
@@ -138,14 +139,14 @@ public class App extends Application {
         FontIcon expandIcon = new FontIcon("mdi2c-chevron-right-box");
         collapseIcon.setIconColor(Color.WHITE);
         expandIcon.setIconColor(Color.WHITE);
-        collapseIcon.setIconSize(40);
-        expandIcon.setIconSize(40);
+        collapseIcon.setIconSize(30);
+        expandIcon.setIconSize(30);
         toggleButton.setGraphic(collapseIcon);
         toggleButton.getStyleClass().add("toggle-button");
-        
-        toggleButton.setPrefSize(40, 40);
-        toggleButton.setMinSize(40, 40);
-        toggleButton.setMaxSize(40, 40);
+    
+        toggleButton.setPrefSize(30, 30);
+        toggleButton.setMinSize(30, 30);
+        toggleButton.setMaxSize(30, 30);
     
         // Create logo
         Image iconImage = new Image(getClass().getResourceAsStream("/exoplanet64.png"));
@@ -184,8 +185,7 @@ public class App extends Application {
         toggleButton.setOnAction(e -> {
             if (toggleButton.isSelected()) {
                 // Collapse
-                expandedContent.setVisible(false);
-                collapsedContent.setVisible(true);
+                sidebar.setCenter(createCollapsedContent());
                 toggleButton.setGraphic(expandIcon);
                 sidebar.setPrefWidth(15); 
                 titleLabel.setVisible(false);
@@ -193,13 +193,12 @@ public class App extends Application {
                 topContainer.getChildren().clear();
                 topContainer.getChildren().addAll(logoIcon, toggleButton);
                 topContainer.setAlignment(Pos.CENTER);
-                HBox.setMargin(logoIcon, new Insets(10, 0, 0, 20)); // Adjusted margin
+                HBox.setMargin(logoIcon, new Insets(10, 0, 0, 20));
                 HBox.setMargin(spacer, Insets.EMPTY);
                 HBox.setMargin(toggleButton, new Insets(4,0, 0, -15));
             } else {
                 // Expand
-                expandedContent.setVisible(true);
-                collapsedContent.setVisible(false);
+                sidebar.setCenter(createExpandedContent());
                 toggleButton.setGraphic(collapseIcon);
                 sidebar.setPrefWidth(SIDEBAR_WIDTH);
                 titleLabel.setVisible(true);
@@ -283,12 +282,19 @@ public class App extends Application {
             menuButton.setMnemonicParsing(true);
             menuButton.setToggleGroup(toggleGroup);
             
-            // Set the height of the expanded menu buttons
             menuButton.setPrefHeight(EXPANDED_BUTTON_HEIGHT);
             menuButton.setMinHeight(EXPANDED_BUTTON_HEIGHT);
             menuButton.setMaxHeight(EXPANDED_BUTTON_HEIGHT);
             
-            menuButton.setOnAction(e -> switchPanel(item[1]));
+            menuButton.setOnAction(e -> {
+                selectedMenuItem = item[1];
+                switchPanel(item[1]);
+            });
+
+            // Set the initial selection state
+            if (item[1].equals(selectedMenuItem)) {
+                menuButton.setSelected(true);
+            }
             
             menuItems.getChildren().add(menuButton);
         }
@@ -321,7 +327,6 @@ public class App extends Application {
         searchIcon.setIconColor(Color.WHITE);
         searchIcon.setIconSize(16);
 
-        // Update the search button size
         Button searchButton = new Button();
         searchButton.setOpacity(1);
         searchButton.setGraphic(searchIcon);
@@ -335,7 +340,6 @@ public class App extends Application {
         searchButton.setOnAction(e -> expandAndSearch());
 
         buttonBox.getChildren().add(searchButton);
-
     
         // Add existing menu items
         ToggleGroup toggleGroup = new ToggleGroup();
@@ -362,16 +366,23 @@ public class App extends Application {
             iconButton.setGraphic(icon);
             iconButton.getStyleClass().addAll("accent", "icon-button");
             
-            // Set the size of the collapsed menu buttons
             iconButton.setPrefSize(COLLAPSED_BUTTON_SIZE, 40);
             iconButton.setMinSize(COLLAPSED_BUTTON_SIZE, 40);
             iconButton.setMaxSize(COLLAPSED_BUTTON_SIZE, 40);
             
             iconButton.setAlignment(Pos.CENTER);
             iconButton.setPadding(Insets.EMPTY);
-            iconButton.setOnAction(e -> switchPanel(item[1]));
+            iconButton.setOnAction(e -> {
+                selectedMenuItem = item[1];
+                switchPanel(item[1]);
+            });
             iconButton.setMnemonicParsing(true);
             iconButton.setToggleGroup(toggleGroup);
+
+            // Set the initial selection state
+            if (item[1].equals(selectedMenuItem)) {
+                iconButton.setSelected(true);
+            }
             
             buttonBox.getChildren().add(iconButton);
         }
@@ -383,7 +394,6 @@ public class App extends Application {
         versionPane.setPadding(new Insets(10, 0, 20, 0));
         StackPane.setAlignment(version, Pos.CENTER);
     
-        // Add button box and version pane to collapsed content
         collapsedContent.getChildren().addAll(buttonBox, versionPane);
         VBox.setVgrow(buttonBox, Priority.ALWAYS);
     
@@ -398,6 +408,7 @@ public class App extends Application {
     }
 
     private void switchPanel(String panelName) {
+        selectedMenuItem = panelName; // Update the selected menu item
         ContentPanel panel = switch (panelName) {
             case "Dashboard" -> new DashboardPanel();
             case "Orbital Regions" -> new OrbitalRegionsPanel();
@@ -421,24 +432,26 @@ public class App extends Application {
             toggleButton.fire(); // This will deselect the button and trigger the expand action
         } else {
             // If it's already expanded, we still want to trigger the expand logic
-            StackPane sidebarContent = (StackPane) sidebar.getCenter();
-            VBox expandedContent = (VBox) sidebarContent.getChildren().get(0);
-            VBox collapsedContent = (VBox) sidebarContent.getChildren().get(1);
-            expandedContent.setVisible(true);
-            collapsedContent.setVisible(false);
-            toggleButton.setGraphic(new FontIcon("mdi2c-chevron-left-box"));
+            sidebar.setCenter(createExpandedContent());
             sidebar.setPrefWidth(SIDEBAR_WIDTH);
+            
             HBox topContainer = (HBox) sidebar.getTop();
             HBox logoTitleBox = (HBox) topContainer.getChildren().get(0);
             Label titleLabel = (Label) logoTitleBox.getChildren().get(1);
             titleLabel.setVisible(true);
             logoTitleBox.setAlignment(Pos.CENTER_LEFT);
+            
             if (topContainer.getChildren().size() == 2) {
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
                 topContainer.getChildren().add(1, spacer);
             }
             topContainer.setAlignment(Pos.CENTER_LEFT);
+            
+            FontIcon collapseIcon = new FontIcon("mdi2c-chevron-left-box");
+            collapseIcon.setIconColor(Color.WHITE);
+            collapseIcon.setIconSize(30);
+            toggleButton.setGraphic(collapseIcon);
         }
     }
 
