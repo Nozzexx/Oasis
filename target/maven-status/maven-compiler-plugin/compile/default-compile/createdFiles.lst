@@ -4,9 +4,12 @@ oasis\panels\SpaceWeatherPanel.class
 oasis\SplashScreen.class
 oasis\panels\DashboardPanel.class
 oasis\panels\DebrisTrackingPanel.class
+oasis\panels\ExoplanetPanel$1.class
+oasis\panels\ExoplanetPanel$Exoplanet.class
 oasis\panels\ExoplanetPanel.class
 oasis\panels\SatelliteStatusPanel.class
 oasis\App.class
 oasis\panels\DataDisplayPanel.class
 oasis\panels\OrbitalRegionsPanel.class
 oasis\panels\ContentPanel.class
+oasis\panels\ExoplanetPanel$2.class

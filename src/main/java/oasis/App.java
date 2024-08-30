@@ -10,6 +10,7 @@ import javafx.application.Preloader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -70,25 +71,24 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         // Apply AtlantaFX theme
         Application.setUserAgentStylesheet(new NordDark().getUserAgentStylesheet());
-
+    
         // Create the main layout
         BorderPane root = new BorderPane();
-
+    
         // Create the sidebar
         sidebar = createSidebar();
         root.setLeft(sidebar);
-
+    
         // Create the main content area
         contentArea = new StackPane();
         root.setCenter(contentArea);
-
-        // Add a placeholder content
-        Label contentLabel = new Label("Select an option from the sidebar");
-        contentArea.getChildren().add(contentLabel);
-
+    
+        // Set the Dashboard as the initial content
+        switchPanel("Dashboard");
+    
         Scene scene = new Scene(root, DEFAULT_WIDTH, DEFAULT_HEIGHT);
         scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
-
+    
         // Set the icon
         try {
             Image icon = new Image(getClass().getResourceAsStream("/exoplanet64.png"));
@@ -96,20 +96,20 @@ public class App extends Application {
         } catch (Exception e) {
             System.err.println("Failed to load application icon: " + e.getMessage());
         }
-
+    
         // Set window properties
         primaryStage.setTitle(APP_NAME + " | v" + VERSION);
         primaryStage.setMinWidth(DEFAULT_WIDTH);
         primaryStage.setMinHeight(DEFAULT_HEIGHT);
         primaryStage.setScene(scene);
-
+    
         // Center the window on the primary screen
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         primaryStage.setX((screenBounds.getWidth() - DEFAULT_WIDTH) / 2);
         primaryStage.setY((screenBounds.getHeight() - DEFAULT_HEIGHT) / 2);
-
+    
         primaryStage.show();
-
+    
         // Force layout update, apply styles, and expand sidebar after a short delay
         Platform.runLater(() -> {
             expandSidebar();
@@ -358,10 +358,12 @@ public class App extends Application {
     
         for (String[] item : items) {
             FontIcon icon = new FontIcon(item[0]);
+            
             icon.setIconColor(Color.WHITE);
             icon.setIconSize(24);
 
             ToggleButton iconButton = new ToggleButton();
+            iconButton.setId(item[1]);
             iconButton.setOpacity(1);
             iconButton.setGraphic(icon);
             iconButton.getStyleClass().addAll("accent", "icon-button");
@@ -419,12 +421,56 @@ public class App extends Application {
             case "Satellite Status" -> new SatelliteStatusPanel();
             case "Exoplanets" -> new ExoplanetPanel();
             case "Settings" -> new SettingsPanel();
-            default -> new DashboardPanel();
+            default -> {
+                System.out.println("Unknown panel: " + panelName + ". Defaulting to Dashboard.");
+                yield new DashboardPanel();
+            }
         };
-
+    
         contentArea.getChildren().clear();
         contentArea.getChildren().add(panel.getContent());
         panel.updateContent();
+    
+        // Update the sidebar selection
+        updateSidebarSelection(panelName);
+    }
+
+    private void updateSidebarSelection(String panelName) {
+        Node centerContent = sidebar.getCenter();
+        VBox menuItems;
+    
+        if (centerContent instanceof StackPane) {
+            // Expanded state
+            StackPane stackPane = (StackPane) centerContent;
+            VBox expandedContent = (VBox) stackPane.getChildren().get(0);
+            menuItems = (VBox) expandedContent.getChildren().get(1);
+        } else if (centerContent instanceof VBox) {
+            // Collapsed state
+            menuItems = (VBox) centerContent;
+        } else {
+            System.err.println("Unexpected sidebar center content: " + centerContent);
+            return;
+        }
+    
+        for (Node node : menuItems.getChildren()) {
+            if (node instanceof ToggleButton button) {
+                Node graphic = button.getGraphic();
+                if (graphic instanceof HBox menuItemBox) {
+                    Node secondChild = menuItemBox.getChildren().get(1);
+                    if (secondChild instanceof Label text && text.getText().equals(panelName)) {
+                        button.setSelected(true);
+                        break;
+                    }
+                } else if (graphic instanceof FontIcon) {
+                    // Handle collapsed state buttons
+                    String buttonId = button.getId();
+                    if (buttonId != null && buttonId.equals(panelName)) {
+                        button.setSelected(true);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private void expandSidebar() {
