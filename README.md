@@ -26,24 +26,10 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
   - Radiation levels
   - Atmospheric drag for different orbital altitudes
 - Predict space environment conditions
+- Historical view of data over time
 
-### 3. Exoplanet Habitability Analysis
-- Habitability scoring model considering:
-  - Planet size and mass
-  - Orbital characteristics
-  - Star type and characteristics
-  - Presence of atmosphere (if detectable)
-- Predict potential habitability of exoplanets
-
-### 4. Data Visualization
-- Interactive visualizations of near-Earth space environments
-- Rating heatmap for different orbital regions
-- Visualizations of exoplanet systems
-- Habitability heatmap of known exoplanets
-- Comparative charts of exoplanet characteristics
-
-### 5. User Interface
-- JavaFX-based GUI for intuitive interaction with the application
+### 3. User Interface
+- React-based GUI for intuitive interaction with the application
 - Dashboard for overview of key space environment and exoplanet data
 - Detailed views for in-depth analysis of specific datasets
 
@@ -57,12 +43,14 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
 ## 🛠️ Technologies
 
 - Java 17+
-- JavaFX 17+
+- React
+- Python (for Data)
+- Typscript / Javascript / CSS (for Frontend)
+- Spring / Docker / Kubernetes / AWS (for Backend)
 - Maven
 - JSON processing libraries (e.g., Jackson)
-- Charting libraries (e.g., JFreeChart or JavaFX built-in charts)
 
-## 📥 Installation and Usage
+## 📥 Installation and Usage (DO NOT USE YET, THIS IS INCORRECT)
 
 1. Ensure you have Java Development Kit (JDK) 17 or later installed.
 
@@ -79,7 +67,7 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
 
 4. Run the application:
    ```bash
-   mvn javafx:run
+   mvn javafx:run 
    ```
 
 ## 🤝 Contributing
