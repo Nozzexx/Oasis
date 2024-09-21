@@ -4,9 +4,7 @@
 
 ## 🚀 Project Overview
 
-OASIS is a comprehensive Java-based application that combines near-Earth space environment assessment with exoplanet habitability prediction. This tool aims to provide valuable insights for space operations, satellite management, and exoplanet research using data from various open-source datasets including NASA, NOAA, and space-track.org.
-
-> **Note:** This README outlines the full scope of possibilities for OASIS. The actual implemented features may vary based on development priorities and resources.
+OASIS is a comprehensive application that combines near-Earth space environment assessment with exoplanet habitability prediction. This tool aims to provide valuable insights for space operations, satellite management, and exoplanet research using data from various open-source datasets including NASA, NOAA, and space-track.org.
 
 ## ✨ Key Features
 
@@ -16,7 +14,7 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
   - NASA's space environment datasets
   - NOAA's Space Weather Prediction Center
   - Space-track.org orbital debris data
-- Clean, normalize, and combine data from various sources
+- Clean, normalize, and combine data from various sources using AWS Lambda functions
 - Handle missing values and outliers
 
 ### 2. Near-Earth Space Environment Analysis
@@ -25,7 +23,7 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
   - Orbital debris density and distribution
   - Radiation levels
   - Atmospheric drag for different orbital altitudes
-- Predict space environment conditions
+- Predict space environment conditions using machine learning models
 - Historical view of data over time
 
 ### 3. User Interface
@@ -33,41 +31,48 @@ OASIS is a comprehensive Java-based application that combines near-Earth space e
 - Dashboard for overview of key space environment and exoplanet data
 - Detailed views for in-depth analysis of specific datasets
 
-## 🚀 Potential Extensions
-
-- Predict characteristics of undiscovered exoplanets
-- Simulate exoplanet atmospheric conditions
-- Optimize satellite constellation configurations
-- Create a risk assessment module for space missions or satellite hardware
-
 ## 🛠️ Technologies
 
-- Java 17+
-- React
-- Python (for Data)
-- Typscript / Javascript / CSS (for Frontend)
-- Spring / Docker / Kubernetes / AWS (for Backend)
-- Maven
-- JSON processing libraries (e.g., Jackson)
+- AWS Services:
+  - Lambda (Python for data processing, JavaScript for backend logic)
+  - API Gateway
+  - CloudWatch Events
+  - RDS PostgreSQL
+  - Elastic Beanstalk
+- Frontend:
+  - React
+  - TypeScript
+  - CSS
+- Backend:
+  - Node.js (running in AWS Lambda and Elastic Beanstalk)
+- Data Processing:
+  - Python (running in AWS Lambda)
+- Machine Learning:
+  - Python libraries (e.g., scikit-learn, TensorFlow) running in AWS Lambda
+- Infrastructure:
+  - Docker
+  - Kubernetes (potential future use)
 
-## 📥 Installation and Usage (DO NOT USE YET, THIS IS INCORRECT)
+## 📥 Installation and Usage
 
-1. Ensure you have Java Development Kit (JDK) 17 or later installed.
+As OASIS is currently deployed on AWS, there's no local installation process. However, for development purposes:
 
-2. Clone the repository:
+1. Clone the repository:
    ```bash
    git clone https://github.com/your-organization/OASIS.git
    cd OASIS
    ```
 
-3. Build the project using Maven:
-   ```bash
-   mvn clean install
-   ```
+2. Set up AWS CLI and configure your credentials.
 
-4. Run the application:
+3. Deploy the backend services to AWS:
+   (Include specific deployment instructions here)
+
+4. For the frontend:
    ```bash
-   mvn javafx:run 
+   cd frontend
+   npm install
+   npm start
    ```
 
 ## 🤝 Contributing
@@ -83,7 +88,8 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - NASA for providing open-source exoplanet and space environment data
 - NOAA for space weather prediction data
 - space-track.org for orbital debris data
+- AWS for cloud infrastructure and services
 
 ## ⚠️ Disclaimer
 
-OASIS is under active development and its features are subject to change. Not all described functionalities may be implemented in the current version.
+OASIS is under active development and its features are subject to change. The application is currently in a prototype phase, and not all described functionalities may be fully implemented.
