@@ -4,58 +4,72 @@
 
 ## 🚀 Project Overview
 
-OASIS is a comprehensive application that combines near-Earth space environment assessment with exoplanet habitability prediction. This tool aims to provide valuable insights for space operations, satellite management, and exoplanet research using data from various open-source datasets including NASA, NOAA, and space-track.org.
+OASIS is a cloud-based application for near-Earth space environment assessment and exoplanet habitability prediction. Using AWS services, React, and Python, it processes NASA, NOAA, and space-track.org data to provide insights for space operations and research.
 
 ## ✨ Key Features
 
 ### 1. Data Ingestion and Processing
-- Import data from multiple sources:
-  - NASA's Exoplanet Archive API
-  - NASA's space environment datasets
-  - NOAA's Space Weather Prediction Center
-  - Space-track.org orbital debris data
-- Clean, normalize, and combine data from various sources using AWS Lambda functions
-- Handle missing values and outliers
+- AWS Lambda Python Service for data ingestion, processing, and sanitization
+- Fetches data from multiple Public APIs including NASA, NOAA, and space-track.org
+- Triggered by AWS API Gateway and scheduled by CloudWatch Events
+- Inserts and updates data in AWS RDS PostgreSQL Database
 
-### 2. Near-Earth Space Environment Analysis
-- Space environment rating model considering:
-  - Space weather conditions
-  - Orbital debris density and distribution
-  - Radiation levels
-  - Atmospheric drag for different orbital altitudes
-- Predict space environment conditions using machine learning models
-- Historical view of data over time
+### 2. Data Storage and Retrieval
+- AWS RDS PostgreSQL Database for storing processed data
+- Efficient querying for real-time analysis and forecasting
 
-### 3. User Interface
-- React-based GUI for intuitive interaction with the application
-- Dashboard for overview of key space environment and exoplanet data
-- Detailed views for in-depth analysis of specific datasets
+### 3. Machine Learning Model
+- AWS Lambda-based Python Machine Learning Model for predictive analytics
+- Queries and updates data in the PostgreSQL database
+- Provides intelligent insights and predictions
+
+### 4. Data Retrieval and Display
+- AWS Elastic Beanstalk hosting a scalable JavaScript Service
+- Handles data retrieval from the database and updates the user interface
+- Communicates with the Python-based Machine Learning Model for predictions
+
+### 5. User Interface
+- React-based frontend for intuitive interaction with the application
+- Communicates with the backend via REST API
+- Renders in the user's browser
 
 ## 🛠️ Technologies
 
 - AWS Services:
-  - Lambda (Python for data processing, JavaScript for backend logic)
+  - Lambda (Python for data processing and machine learning)
   - API Gateway
   - CloudWatch Events
   - RDS PostgreSQL
   - Elastic Beanstalk
 - Frontend:
   - React
-  - TypeScript
-  - CSS
+  - JavaScript
 - Backend:
-  - Node.js (running in AWS Lambda and Elastic Beanstalk)
-- Data Processing:
-  - Python (running in AWS Lambda)
-- Machine Learning:
-  - Python libraries (e.g., scikit-learn, TensorFlow) running in AWS Lambda
-- Infrastructure:
-  - Docker
-  - Kubernetes (potential future use)
+  - Python (AWS Lambda for data processing and machine learning)
+  - JavaScript (AWS Elastic Beanstalk for data retrieval and UI updates)
+- Database:
+  - PostgreSQL (AWS RDS)
+
+## System Architecture
+
+The OASIS system is divided into two main parts:
+
+1. Single Instance Services:
+   - Public APIs data source
+   - AWS Lambda Python Service for data ingestion, processing, and sanitization
+   - AWS RDS PostgreSQL Database
+   - AWS Lambda Python Machine Learning Model
+
+2. Scalable Services:
+   - AWS Elastic Beanstalk JavaScript Service for data retrieval and UI updates
+   - React Frontend
+   - Browser interface
+
+Data flows from Public APIs through the Python Service into the Database. The Python-based Machine Learning Model interacts with the Database for training and predictions. The JavaScript Service retrieves data from the Database and the Machine Learning Model, then provides it to the React Frontend for display in the user's browser.
 
 ## 📥 Installation and Usage
 
-As OASIS is currently deployed on AWS, there's no local installation process. However, for development purposes:
+As OASIS is deployed on AWS, there's no local installation process. For development:
 
 1. Clone the repository:
    ```bash
@@ -65,8 +79,7 @@ As OASIS is currently deployed on AWS, there's no local installation process. Ho
 
 2. Set up AWS CLI and configure your credentials.
 
-3. Deploy the backend services to AWS:
-   (Include specific deployment instructions here)
+3. Deploy the backend services to AWS (specific instructions to be added).
 
 4. For the frontend:
    ```bash
@@ -85,9 +98,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## 🙏 Acknowledgments
 
-- NASA for providing open-source exoplanet and space environment data
-- NOAA for space weather prediction data
-- space-track.org for orbital debris data
+- NASA, NOAA, and space-track.org for providing open-source space data
 - AWS for cloud infrastructure and services
 
 ## ⚠️ Disclaimer
