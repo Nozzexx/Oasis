@@ -37,7 +37,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
             {/* Logo Image (always visible) */}
             <Image src="/assets/images/OASIS_LOGO.png" alt="OASIS Logo" width={collapsed ? 40 : 40} height={collapsed ? 40 : 40} />
             {!collapsed && (
-              <h1 className="text-2xl font-bold text-white ml-2">O.A.S.I.S.</h1>
+              <h1 className="text-3xl font-bold text-white ml-2">O.A.S.I.S.</h1>
             )}
           </div>
 
@@ -124,7 +124,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
       {/* Version Text (Centered at the Bottom) */}
       {!collapsed && (
         <div className="text-white text-center mb-4">
-          Version 2.0.3a
+          Version 0.0.3a
         </div>
       )}
     </div>
