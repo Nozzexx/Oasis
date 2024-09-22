@@ -15,6 +15,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
   const [activeTab, setActiveTab] = useState<string>('favorites');
   const [favorites, setFavorites] = useState<string[]>(['Overview', 'Projects']);
   const [recentlyVisited, setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);  // Track hovered item for tooltips
 
   const categories = [
     { name: 'Overview', icon: <FaGlobe />, module: 'DashboardModule' },
@@ -55,7 +56,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
                 className={`text-white ${
                   activeTab === 'favorites'
                     ? 'border-b-2 border-accent text-white'
-                    : 'text-gray-400'  // Greyed out when unselected
+                    : 'text-gray-400'
                 }`}
                 onClick={() => setActiveTab('favorites')}
               >
@@ -65,7 +66,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
                 className={`text-white ${
                   activeTab === 'recently'
                     ? 'border-b-2 border-accent text-white'
-                    : 'text-gray-400'  // Greyed out when unselected
+                    : 'text-gray-400'
                 }`}
                 onClick={() => setActiveTab('recently')}
               >
@@ -99,7 +100,12 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
         <div className="mt-2">
           <ul className="space-y-2">
             {categories.map((category) => (
-              <li key={category.name}>
+              <li
+                key={category.name}
+                onMouseEnter={() => setHoveredItem(category.name)}  // Show tooltip on hover
+                onMouseLeave={() => setHoveredItem(null)}  // Hide tooltip on mouse leave
+                className="relative"  // Make sure tooltip is positioned relative to the item
+              >
                 <button
                   onClick={() => {
                     setActiveCategory(category.name);
@@ -115,6 +121,13 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
                   <span className="flex-shrink-0 text-center">{category.icon}</span>
                   {!collapsed && <span>{category.name}</span>}
                 </button>
+
+                {/* Tooltip */}
+                {collapsed && hoveredItem === category.name && (
+                   <div className="absolute left-full ml-3 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded px-3 py-1 shadow-lg opacity-100 z-50">
+                    {category.name}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -124,7 +137,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
       {/* Version Text (Centered at the Bottom) */}
       {!collapsed && (
         <div className="text-white text-center mb-4">
-          Version 0.0.3a
+          Version 2.0.3a
         </div>
       )}
     </div>
