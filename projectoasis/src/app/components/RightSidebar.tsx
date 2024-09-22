@@ -14,29 +14,31 @@ interface SidebarItem {
 interface RightSidebarProps {
   collapsed: boolean;
   toggleCollapse: () => void;
+  handleNotificationClick: () => void; // Function to reduce the notification count
 }
 
 const notifications = [
   { icon: <FaBell />, title: 'You fixed a bug.', time: 'Just now', details: 'Detailed information about the bug fix.' },
   { icon: <FaExclamationCircle />, title: 'Dataset Updated.', time: '59 minutes ago', details: 'Details about the dataset update.' },
-  { icon: <FaCloudDownloadAlt />, title: 'A New Update is Available!', time: '12 hours ago', details: 'Details about the latest update.' }
+  { icon: <FaCloudDownloadAlt />, title: 'A New Update is Available!', time: '12 hours ago', details: 'Details about the latest update.' },
 ];
 
 const newsUpdates = [
   { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'NASA Heads to the Moon...', time: 'Just now', details: 'NASA is planning a new mission to the moon...' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'NOAA names Tropical Stor...', time: '59 minutes ago', details: 'NOAA has named the latest tropical storm.' }
+  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'NOAA names Tropical Stor...', time: '59 minutes ago', details: 'NOAA has named the latest tropical storm.' },
 ];
 
 const education = [
   { icon: <FaBook />, title: 'Getting Started with OASIS...', time: 'Just now', details: 'Learn how to get started with OASIS...' },
-  { icon: <FaBook />, title: 'Understanding NEOs...', time: '59 minutes ago', details: 'Understanding Near Earth Objects (NEOs)...' }
+  { icon: <FaBook />, title: 'Understanding NEOs...', time: '59 minutes ago', details: 'Understanding Near Earth Objects (NEOs)...' },
 ];
 
-export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebarProps) {
+export default function RightSidebar({ collapsed, toggleCollapse, handleNotificationClick }: RightSidebarProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(true);
   const [isNewsUpdatesOpen, setIsNewsUpdatesOpen] = useState(true);
   const [isEducationOpen, setIsEducationOpen] = useState(true);
   const [selectedItem, setSelectedItem] = useState<SidebarItem | null>(null); // Track the clicked item for the modal
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false); // Track the About Us modal
 
   const toggleSection = (section: string) => {
     switch (section) {
@@ -54,12 +56,22 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
     }
   };
 
+  // Handle clicking a notification item
   const handleItemClick = (item: SidebarItem) => {
-    setSelectedItem(item);
+    setSelectedItem(item);          // Set the selected item (for modal display)
+    handleNotificationClick();      // Call the parent's function to reduce the notification count
   };
 
   const handleCloseModal = () => {
-    setSelectedItem(null);
+    setSelectedItem(null); // Close the notification or education modal
+  };
+
+  const handleAboutUsClick = () => {
+    setIsAboutModalOpen(true); // Open the About Us modal
+  };
+
+  const handleCloseAboutUsModal = () => {
+    setIsAboutModalOpen(false); // Close the About Us modal
   };
 
   return (
@@ -81,7 +93,7 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
             {isNotificationsOpen && (
               <ul className="mt-2 space-y-2">
                 {notifications.map((item, index) => (
-                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#2c2c2c] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
+                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
                       <h3 className="text-sm font-semibold truncate">{item.title}</h3>
@@ -93,7 +105,7 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
             )}
           </div>
 
-          {/* News Section */}
+          {/* News Updates Section */}
           <div className="mb-4">
             <div className="flex justify-between cursor-pointer text-white" onClick={() => toggleSection('news')}>
               <h2 className="text-lg font-semibold">News Updates</h2>
@@ -102,7 +114,7 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
             {isNewsUpdatesOpen && (
               <ul className="mt-2 space-y-2">
                 {newsUpdates.map((item, index) => (
-                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#2c2c2c] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
+                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
                       <h3 className="text-sm font-semibold truncate">{item.title}</h3>
@@ -123,7 +135,7 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
             {isEducationOpen && (
               <ul className="mt-2 space-y-2 flex-grow">
                 {education.map((item, index) => (
-                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#2c2c2c] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
+                  <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
                       <h3 className="text-sm font-semibold truncate">{item.title}</h3>
@@ -149,6 +161,35 @@ export default function RightSidebar({ collapsed, toggleCollapse }: RightSidebar
               <p className="text-gray-700">{selectedItem.details}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal for About Us Section */}
+      {isAboutModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCloseAboutUsModal}>
+          <div className="bg-[#1c1c1c] max-w-screen-sm max-h-screen w-full md:w-1/3 p-6 rounded-lg shadow-lg relative overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <button className="absolute top-2 right-2 text-gray-600" onClick={handleCloseAboutUsModal}>
+              <FaTimes />
+            </button>
+            <h2 className="text-2xl font-bold mb-4">About the Development Team</h2>
+            <div className="max-h-80 overflow-y-auto">
+              <p className="text-gray-400">Our team of skilled developers from the University of Texas at Dallas crafted the O.A.S.I.S platform to help space research and exploration. With a passion for technology and innovation, we strive to deliver the best solutions for space-based applications.</p>
+              <ul className="mt-4 text-gray-400">
+                <li>Project Lead: Josh Duke</li>
+                <li>Data Scientist: Ashlynn Norris</li>
+                <li>Data Enginner: Tsion Yigzaw</li>
+                <li>Frontend Developer: Clara Connor</li>
+                <li>Backend Developer: Al Altaay</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* About Us Button (Centered at the Bottom) */}
+      {!collapsed && (
+        <div className="text-white text-center mb-4 underline cursor-pointer" onClick={handleAboutUsClick}>
+          About Us
         </div>
       )}
     </div>

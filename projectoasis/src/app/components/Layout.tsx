@@ -1,29 +1,48 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import LeftSidebar from './LeftSidebar';
 import RightSidebar from './RightSidebar';
 import Topbar from './Topbar';
-import DashboardModule from './DashboardModule'; 
+import DashboardModule from './DashboardModule';
 import DataDisplayModule from './DataDisplayModule';
 import NearEarthObjectsModule from './NearEarthObjectsModule';
-import OrbitalRegionsModule from './OrbitalRegionsModule'; 
-import SpaceWeatherModule from './SpaceWeatherModule';     
-import RiskAssessmentModule from './RiskAssessmentModule'; 
-import SatelliteStatusModule from './SatelliteStatusModule'; 
+import OrbitalRegionsModule from './OrbitalRegionsModule';
+import SpaceWeatherModule from './SpaceWeatherModule';
+import RiskAssessmentModule from './RiskAssessmentModule';
+import SatelliteStatusModule from './SatelliteStatusModule';
 import DebrisTrackingModule from './DebrisTrackingModule';
 
 interface LayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
   const [isLeftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  
+  const [notificationsCount, setNotificationsCount] = useState(3); // Initial notification count
+
+  // Handle active module
   const [activeModule, setActiveModule] = useState('DashboardModule'); // Default module
 
-  // Function to render the active module
+  // Handle dark mode toggle
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Dark mode effect
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  // Function to reduce the notification count
+  const handleNotificationClick = () => {
+    setNotificationsCount((prevCount) => Math.max(prevCount - 1, 0));
+  };
+
+  // Function to render the active module dynamically
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'DashboardModule':
@@ -33,39 +52,43 @@ export default function Layout({ children }: LayoutProps) {
       case 'NearEarthObjectsModule':
         return <NearEarthObjectsModule />;
       case 'OrbitalRegionsModule':
-        return <OrbitalRegionsModule />; // Render OrbitalRegionsModule
+        return <OrbitalRegionsModule />;
       case 'SpaceWeatherModule':
-        return <SpaceWeatherModule />;   // Render SpaceWeatherModule
+        return <SpaceWeatherModule />;
       case 'DebrisTrackingModule':
-        return <DebrisTrackingModule/>;  // Render DebrisTrackingModule
+        return <DebrisTrackingModule />;
       case 'RiskAssessmentModule':
-        return <RiskAssessmentModule />; // Render RiskAssessmentModule
+        return <RiskAssessmentModule />;
       case 'SatelliteStatusModule':
-        return <SatelliteStatusModule />; // Render SatelliteStatusModule
+        return <SatelliteStatusModule />;
       default:
-        return <DashboardModule />; // Default to Dashboard
+        return <DashboardModule />; // Fallback to default
     }
   };
 
   return (
-    <div className="h-screen flex">
+    <div className={`h-screen flex ${darkMode ? 'dark' : ''}`}>
       {/* Left Sidebar */}
-      <LeftSidebar 
-        collapsed={isLeftSidebarCollapsed} 
-        toggleCollapse={() => setLeftSidebarCollapsed(!isLeftSidebarCollapsed)} 
-        setActiveModule={setActiveModule}  // Pass setActiveModule to LeftSidebar
+      <LeftSidebar
+        collapsed={isLeftSidebarCollapsed}
+        toggleCollapse={() => setLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
+        setActiveModule={setActiveModule} // Pass setActiveModule to LeftSidebar for module switching
       />
 
       {/* Main Content Area (Topbar + Central Content) */}
       <div className="flex flex-col flex-1">
         {/* Topbar */}
-        <Topbar />
+        <Topbar
+          darkMode={darkMode}
+          toggleDarkMode={() => setDarkMode(!darkMode)}
+          isRightSidebarCollapsed={isRightSidebarCollapsed}
+          toggleRightSidebar={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
+        />
 
         {/* Central Content Area */}
         <main
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto bg-[#1c1c1c] relative"
           style={{
-            backgroundColor: '#1c1c1c',
             opacity: 0.8,
             backgroundImage: `
               linear-gradient(#222222 2px, transparent 2px),
@@ -77,14 +100,15 @@ export default function Layout({ children }: LayoutProps) {
             backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
           }}
         >
-          {renderActiveModule()} {/* Dynamically render the active module */}
+          {renderActiveModule()} {/* Render the active module dynamically */}
         </main>
       </div>
 
       {/* Right Sidebar */}
-      <RightSidebar 
-        collapsed={isRightSidebarCollapsed} 
-        toggleCollapse={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)} 
+      <RightSidebar
+        collapsed={isRightSidebarCollapsed}
+        toggleCollapse={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
+        handleNotificationClick={handleNotificationClick} // Pass handleNotificationClick to RightSidebar
       />
     </div>
   );

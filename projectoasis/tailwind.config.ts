@@ -1,10 +1,10 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   darkMode: 'class', // Enable dark mode support
   content: [
-    './src/app/**/*.{js,ts,jsx,tsx}', // Adjust based on your file structure
-    './src/app/components/**/*.{js,ts,jsx,tsx}',
-    './src/app/pages/**/*.{js,ts,jsx,tsx}',
+    './src/app/**/*.{js,ts,jsx,tsx}',    // Check if this is where your main app files are
+    './src/components/**/*.{js,ts,jsx,tsx}',  // If components are outside `app` folder
+    './src/pages/**/*.{js,ts,jsx,tsx}',   // For Next.js pages
   ],
   theme: {
     extend: {
@@ -31,6 +31,8 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'), // Remove or install if needed
+    require('@tailwindcss/forms'), // Ensure you have this installed
   ],
 };
+
+export default config;

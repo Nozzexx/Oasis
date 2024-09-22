@@ -1,14 +1,36 @@
 'use client';
 
-import { FaStar, FaTh, FaBell, FaSun, FaMoon, FaSearch } from 'react-icons/fa';
+import { FaStar, FaTh, FaBell, FaRegBell, FaSun, FaMoon, FaSearch, FaFileExport } from 'react-icons/fa';
 import { useState } from 'react';
 
-export default function Topbar() {
-  const [darkMode, setDarkMode] = useState(true);
+interface TopbarProps {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+  isRightSidebarCollapsed: boolean;
+  toggleRightSidebar: () => void;
+}
 
-  // Toggle between light and dark modes
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+export default function Topbar({
+  darkMode,
+  toggleDarkMode,
+  isRightSidebarCollapsed,
+  toggleRightSidebar,
+}: TopbarProps) {
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [notificationsCount, setNotificationsCount] = useState(0); // Example notification count
+
+  // Handle click on the notification bell
+  const handleBellClick = () => {
+    if (isRightSidebarCollapsed) {
+      toggleRightSidebar(); // Open right sidebar if it's collapsed
+    }
+    // Add your logic for clearing notifications, if needed
+  };
+
+  // Function to handle exporting data in various formats
+  const handleExport = (format: string) => {
+    console.log(`Exporting data as ${format}`);
+    // Add your export logic here for CSV, JSON, PDF, etc.
   };
 
   return (
@@ -26,7 +48,7 @@ export default function Topbar() {
       <div className="flex-grow"></div> {/* Placeholder for flexible center section */}
 
       {/* Right section */}
-      <div className="flex items-center space-x-4">
+      <div className="relative flex items-center space-x-4">
         {/* Search Bar */}
         <div className="relative">
           <FaSearch className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -37,12 +59,54 @@ export default function Topbar() {
           />
         </div>
 
-        {/* Icons */}
+        {/* Dark Mode Toggle */}
         <button onClick={toggleDarkMode}>
           {darkMode ? <FaSun className="text-xl" /> : <FaMoon className="text-xl" />}
         </button>
-        <FaBell className="text-xl" />
-        <FaTh className="text-xl" />
+
+        {/* Notification Bell with Counter */}
+        <div className="relative" onClick={handleBellClick}>
+          {notificationsCount > 0 ? (
+              <FaBell className="text-xl cursor-pointer" />
+          ) : (
+              <FaRegBell className="text-xl cursor-pointer" />
+          )}
+
+          {notificationsCount > 0 && (
+              <span className="absolute bottom-3 left-3 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                  {notificationsCount}
+              </span>
+          )}
+        </div>
+
+        {/* Export Button with Dropdown */}
+        <div className="relative">
+          <button onClick={() => setShowExportOptions(!showExportOptions)} className="text-white">
+            <FaFileExport className="text-xl" />
+          </button>
+          {showExportOptions && (
+            <div className="absolute right-0 mt-2 w-40 bg-[#222222] text-white rounded shadow-lg z-50">
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-accent"
+                onClick={() => handleExport('CSV')}
+              >
+                Export as CSV
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-accent"
+                onClick={() => handleExport('JSON')}
+              >
+                Export as JSON
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-accent"
+                onClick={() => handleExport('PDF')}
+              >
+                Export as PDF
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
