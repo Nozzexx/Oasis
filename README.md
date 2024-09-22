@@ -4,103 +4,103 @@
 
 ## 🚀 Project Overview
 
-OASIS is a cloud-based application for near-Earth space environment assessment and exoplanet habitability prediction. Using AWS services, React, and Python, it processes NASA, NOAA, and space-track.org data to provide insights for space operations and research.
+OASIS is a cloud-based application designed for near-Earth space environment assessment and exoplanet habitability prediction. Utilizing services from AWS, React, and Python, the system ingests data from NASA, NOAA, and other public datasets to generate insights that support space operations and research.
+
+The backend component of the system is handled by **PRISM** (Python-based Real-time Ingestion and Sanitization Model), which is responsible for ingesting, processing, and sanitizing data, while the frontend, **projectoasis**, is a React-based interface for displaying results.
 
 ## ✨ Key Features
 
-### 1. Data Ingestion and Processing
-- AWS Lambda Python Service for data ingestion, processing, and sanitization
-- Fetches data from multiple Public APIs including NASA, NOAA, and space-track.org
-- Triggered by AWS API Gateway and scheduled by CloudWatch Events
-- Inserts and updates data in AWS RDS PostgreSQL Database
+### 1. Data Ingestion and Processing (PRISM)
 
-### 2. Data Storage and Retrieval
-- AWS RDS PostgreSQL Database for storing processed data
-- Efficient querying for real-time analysis and forecasting
+- **PRISM** is a **Python** service running on **AWS Lambda** for data ingestion and sanitization.
+- It fetches data from multiple public APIs, including NASA, NOAA, and space-track.org.
+- The ingestion pipeline is triggered by **AWS API Gateway** and scheduled using **CloudWatch Events**.
+- Sanitized data is stored in an **AWS RDS PostgreSQL** database for easy querying.
 
-### 3. Machine Learning Model
-- AWS Lambda-based Python Machine Learning Model for predictive analytics
-- Queries and updates data in the PostgreSQL database
-- Provides intelligent insights and predictions
+### 2. Frontend User Interface (projectoasis)
 
-### 4. Data Retrieval and Display
-- AWS Elastic Beanstalk hosting a scalable JavaScript Service
-- Handles data retrieval from the database and updates the user interface
-- Communicates with the Python-based Machine Learning Model for predictions
+- The **projectoasis** frontend is built using **React**, providing users with an intuitive way to visualize and interact with the data.
+- It communicates with the backend via REST APIs, fetching data from the **AWS Elastic Beanstalk** JavaScript service.
+- The frontend renders dynamic data visualizations based on the sanitized and processed datasets provided by **PRISM**.
 
-### 5. User Interface
-- React-based frontend for intuitive interaction with the application
-- Communicates with the backend via REST API
-- Renders in the user's browser
+### 3. Machine Learning Integration
 
-## 🛠️ Technologies
+- **AWS Lambda** is used for machine learning-based predictive analytics, using data stored in the **AWS RDS PostgreSQL** database.
+- Predictions generated from the model are used for space environment forecasting and other advanced analytics.
 
-- AWS Services:
-  - Lambda (Python for data processing and machine learning)
-  - API Gateway
-  - CloudWatch Events
-  - RDS PostgreSQL
-  - Elastic Beanstalk
-- Frontend:
-  - React
-  - JavaScript
-- Backend:
-  - Python (AWS Lambda for data processing and machine learning)
-  - JavaScript (AWS Elastic Beanstalk for data retrieval and UI updates)
-- Database:
-  - PostgreSQL (AWS RDS)
+### 4. Scalability
+
+- The system is designed with scalability in mind, with **AWS Elastic Beanstalk** handling the frontend and JavaScript services, ensuring that as data increases, the system can scale up efficiently.
+- The data retrieval and display layer interacts with the React frontend, allowing for real-time data updates and display.
 
 ## System Architecture
 
-The OASIS system is divided into two main parts:
+The architecture is divided into two main sections:
 
-1. Single Instance Services:
-   - Public APIs data source
-   - AWS Lambda Python Service for data ingestion, processing, and sanitization
-   - AWS RDS PostgreSQL Database
-   - AWS Lambda Python Machine Learning Model
+1. **Single Instance Services**:
+   - Data ingestion, processing, and storage.
+   - Managed through **AWS Lambda** and **AWS RDS PostgreSQL**.
+   - Includes the PRISM backend service (Python-based).
 
-2. Scalable Services:
-   - AWS Elastic Beanstalk JavaScript Service for data retrieval and UI updates
-   - React Frontend
-   - Browser interface
+2. **Scalable Services**:
+   - **AWS Elastic Beanstalk** handles the data retrieval and JavaScript services.
+   - The React-based frontend, **projectoasis**, is deployed here, allowing users to visualize data through a browser interface.
 
-Data flows from Public APIs through the Python Service into the Database. The Python-based Machine Learning Model interacts with the Database for training and predictions. The JavaScript Service retrieves data from the Database and the Machine Learning Model, then provides it to the React Frontend for display in the user's browser.
+Refer to the system architecture diagram for more details (as shown in `Diagram.png`).
+
+## 🛠️ Technologies
+
+- **Frontend**:
+  - React (JavaScript/TypeScript)
+  - TailwindCSS for responsive and modern UI
+- **Backend (PRISM)**:
+  - **Python** (Data ingestion and sanitization via AWS Lambda)
+  - PostgreSQL (AWS RDS for database storage)
+  - Machine Learning (AWS Lambda-based predictive models)
+- **Cloud Infrastructure**:
+  - AWS Lambda
+  - AWS API Gateway
+  - AWS RDS PostgreSQL
+  - AWS Elastic Beanstalk
 
 ## 📥 Installation and Usage
 
-As OASIS is deployed on AWS, there's no local installation process. For development:
+To run the project locally or on AWS:
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-organization/OASIS.git
-   cd OASIS
-   ```
+
+```bash
+git clone https://github.com/your-organization/OASIS.git
+cd OASIS
+```
 
 2. Set up AWS CLI and configure your credentials.
 
-3. Deploy the backend services to AWS (specific instructions to be added).
+3. Deploy the backend services (PRISM):
 
-4. For the frontend:
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
+```bash
+cd prism
+npm install
+npm run deploy
+```
+
+4. Run the frontend locally:
+
+```bash
+cd projectoasis
+npm install
+npm start
+```
 
 ## 🤝 Contributing
 
-We welcome contributions to OASIS! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to make contributions.
+We welcome contributions to OASIS! Please read our CONTRIBUTING.md file for guidelines on how to make contributions.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ## 🙏 Acknowledgments
 
-- NASA, NOAA, and space-track.org for providing open-source space data
-- AWS for cloud infrastructure and services
-
-## ⚠️ Disclaimer
-
-OASIS is under active development and its features are subject to change. The application is currently in a prototype phase, and not all described functionalities may be fully implemented.
+- NASA, NOAA, and space-track.org for providing open-source space data.
+- AWS for cloud infrastructure and services.
