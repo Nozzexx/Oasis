@@ -32,7 +32,6 @@ const newsUpdates = [
   { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'New Discovery...', time: '3 hours ago', details: 'New discoveries in space exploration.' },
   { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'Astronomers Find...', time: '4 hours ago', details: 'Astronomers find a new exoplanet.' },
   { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'Space X Update...', time: '12 hours ago', details: 'SpaceX announces new launch plans.' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'Space X Update...', time: '12 hours ago', details: 'SpaceX announces new launch plans.' },
 ];
 
 const education = [
@@ -40,7 +39,6 @@ const education = [
   { icon: <FaBook />, title: 'Understanding NEOs...', time: '59 minutes ago', details: 'Understanding Near Earth Objects (NEOs)...' },
   { icon: <FaBook />, title: 'Satellite Tracking 101...', time: '3 hours ago', details: 'Basics of satellite tracking and its importance.' },
   { icon: <FaBook />, title: 'Space Debris Management...', time: '4 hours ago', details: 'How to manage space debris and keep space safe.' },
-  { icon: <FaBook />, title: 'Climate Effects on Space...', time: '12 hours ago', details: 'Impact of climate on space weather and satellites.' },
   { icon: <FaBook />, title: 'Climate Effects on Space...', time: '12 hours ago', details: 'Impact of climate on space weather and satellites.' },
 ];
 
@@ -89,7 +87,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
   };
 
   return (
-    <div className={`h-screen bg-[#1c1c1c] p-4 transition-all duration-300 flex flex-col justify-start ${collapsed ? 'w-24' : 'w-72'} border-l border-gray-600`}>
+    <div className={`h-screen bg-[#1c1c1c] p-4 transition-all duration-300 flex flex-col justify-start ${collapsed ? 'w-16' : 'w-72'} border-l border-gray-600`}>
       {/* Sidebar collapse/expand toggle */}
       <div className="cursor-pointer text-white mb-4" onClick={toggleCollapse}>
         {collapsed ? <FaArrowLeft /> : <FaArrowRight />}
@@ -106,7 +104,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </div>
             {isNotificationsOpen && (
               <ul className="mt-2 space-y-2">
-                {(viewAllNotifications ? notifications : notifications.slice(0, 5)).map((item, index) => (
+                {(viewAllNotifications ? notifications : notifications.slice(0, 4)).map((item, index) => (
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
@@ -115,7 +113,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                     </div>
                   </li>
                 ))}
-                {notifications.length > 5 && (
+                {notifications.length > 4 && (
                   <div className="text-xs text-blue-400 cursor-pointer hover:underline" onClick={() => setViewAllNotifications(!viewAllNotifications)}>
                     {viewAllNotifications ? 'View Less' : 'View All'}
                   </div>
@@ -132,7 +130,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </div>
             {isNewsUpdatesOpen && (
               <ul className="mt-2 space-y-2">
-                {(viewAllNews ? newsUpdates : newsUpdates.slice(0, 5)).map((item, index) => (
+                {(viewAllNews ? newsUpdates : newsUpdates.slice(0, 4)).map((item, index) => (
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
@@ -141,7 +139,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                     </div>
                   </li>
                 ))}
-                {newsUpdates.length > 5 && (
+                {newsUpdates.length > 4 && (
                   <div className="text-xs text-blue-400 cursor-pointer hover:underline" onClick={() => setViewAllNews(!viewAllNews)}>
                     {viewAllNews ? 'View Less' : 'View All'}
                   </div>
@@ -158,7 +156,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </div>
             {isEducationOpen && (
               <ul className="mt-2 space-y-2">
-                {(viewAllEducation ? education : education.slice(0, 5)).map((item, index) => (
+                {(viewAllEducation ? education : education.slice(0, 4)).map((item, index) => (
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
@@ -167,7 +165,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                     </div>
                   </li>
                 ))}
-                {education.length > 5 && (
+                {education.length > 4 && (
                   <div className="text-xs text-blue-400 cursor-pointer hover:underline" onClick={() => setViewAllEducation(!viewAllEducation)}>
                     {viewAllEducation ? 'View Less' : 'View All'}
                   </div>

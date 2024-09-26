@@ -11,6 +11,9 @@ interface SidebarProps {
 }
 
 export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule }: SidebarProps) {
+
+  const appVersion = process.env.NEXT_PUBLIC_OASIS_APP_VERSION || ' Unknown';
+
   const [activeCategory, setActiveCategory] = useState<string>('Overview');
   const [activeTab, setActiveTab] = useState<string>('favorites');
   const [favorites, setFavorites] = useState<string[]>(['Overview', 'Projects']);
@@ -137,7 +140,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
       {/* Version Text (Centered at the Bottom) */}
       {!collapsed && (
         <div className="text-white text-center mb-4">
-          Version 2.0.3a
+          Version {appVersion}
         </div>
       )}
     </div>
