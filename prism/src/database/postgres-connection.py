@@ -1,10 +1,13 @@
+from dotenv import load_dotenv
+import os
+
 from sqlalchemy import create_engine
 
-username = 'postgres'
-password = 'password'
-host = 'localhost'
-port = '5432'
-database = 'oasis_db'
+username = os.getenv('DATABSE_USERNAME')
+password = os.getenv('DATABASE_PASSWORD')
+host = os.getenv('DATABASE_HOST')
+port = os.getenv('DATABASE_PORT')
+database = os.getenv('DATABASE_NAME')
 
 engine = create_engine(f'postgresql://{username}:{password}@{host}:{port}/{database}')
 
