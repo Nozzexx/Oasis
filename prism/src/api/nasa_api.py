@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime, timedelta
-from src.config import NASA_API_KEY
+from config import NASA_API_KEY
 
 BASE_URL_NEO = "https://api.nasa.gov/neo/rest/v1"
 BASE_URL_DONKI = "https://api.nasa.gov/DONKI"
