@@ -1,18 +1,44 @@
-from dotenv import load_dotenv
 import os
+import psycopg2
+from psycopg2.extras import Json
+import logging
 
-from sqlalchemy import create_engine
+logger = logging.getLogger()
 
-username = os.getenv('DATABSE_USERNAME')
-password = os.getenv('DATABASE_PASSWORD')
-host = os.getenv('DATABASE_HOST')
-port = os.getenv('DATABASE_PORT')
-database = os.getenv('DATABASE_NAME')
+# Database connection parameters
+DB_HOST = os.environ['DB_HOST']
+DB_NAME = os.environ['DB_NAME']
+DB_USER = os.environ['DB_USER']
+DB_PASSWORD = os.environ['DB_PASSWORD']
 
-engine = create_engine(f'postgresql://{username}:{password}@{host}:{port}/{database}')
+def get_db_connection():
+    """Create a database connection."""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        return conn
+    except psycopg2.Error as e:
+        logger.error(f"Unable to connect to the database: {e}")
+        raise
 
-try:
-    with engine.connect() as connection:
-        print("Connection successful.")
-except Exception as e:
-    print(f"Error connecting to the database: {e}")
+def store_data(neo_data, cme_data):
+    """Store the processed data in the database."""
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO space_data (date, neo_data, cme_data)
+                    VALUES (CURRENT_DATE, %s, %s)
+                    ON CONFLICT (date) DO UPDATE
+                    SET neo_data = EXCLUDED.neo_data,
+                        cme_data = EXCLUDED.cme_data
+                """, (Json(neo_data), Json(cme_data)))
+            conn.commit()
+        logger.info("Data successfully stored in the database")
+    except psycopg2.Error as e:
+        logger.error(f"Error storing data in the database: {e}")
+        raise

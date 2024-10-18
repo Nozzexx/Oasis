@@ -20,15 +20,10 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isLeftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(3); // Initial notification count
-
-  // Handle active module
-  const [activeModule, setActiveModule] = useState('DashboardModule'); // Default module
-
-  // Handle dark mode toggle
+  const [notificationsCount, _setNotificationsCount] = useState(0);
+  const [activeModule, setActiveModule] = useState('DashboardModule');
   const [darkMode, setDarkMode] = useState(true);
 
-  // Dark mode effect
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -37,12 +32,10 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [darkMode]);
 
-  // Function to reduce the notification count
   const handleNotificationClick = () => {
-    setNotificationsCount((prevCount) => Math.max(prevCount - 1, 0));
+    _setNotificationsCount((prevCount) => Math.max(prevCount - 1, 0));
   };
 
-  // Function to render the active module dynamically
   const renderActiveModule = () => {
     switch (activeModule) {
       case 'DashboardModule':
@@ -62,30 +55,24 @@ export default function Layout({ children }: LayoutProps) {
       case 'SatelliteStatusModule':
         return <SatelliteStatusModule />;
       default:
-        return <DashboardModule />; // Fallback to default
+        return <DashboardModule />;
     }
   };
 
   return (
     <div className={`h-screen flex ${darkMode ? 'dark' : ''}`}>
-      {/* Left Sidebar */}
       <LeftSidebar
         collapsed={isLeftSidebarCollapsed}
         toggleCollapse={() => setLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
-        setActiveModule={setActiveModule} // Pass setActiveModule to LeftSidebar for module switching
+        setActiveModule={setActiveModule}
       />
-
-      {/* Main Content Area (Topbar + Central Content) */}
       <div className="flex flex-col flex-1">
-        {/* Topbar */}
         <Topbar
           darkMode={darkMode}
           toggleDarkMode={() => setDarkMode(!darkMode)}
           isRightSidebarCollapsed={isRightSidebarCollapsed}
           toggleRightSidebar={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
         />
-
-        {/* Central Content Area */}
         <main
           className="flex-1 overflow-y-auto bg-[#1c1c1c] relative"
           style={{
@@ -100,15 +87,14 @@ export default function Layout({ children }: LayoutProps) {
             backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
           }}
         >
-          {renderActiveModule()} {/* Render the active module dynamically */}
+          {renderActiveModule()}
+          {children}
         </main>
       </div>
-
-      {/* Right Sidebar */}
       <RightSidebar
         collapsed={isRightSidebarCollapsed}
         toggleCollapse={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
-        handleNotificationClick={handleNotificationClick} // Pass handleNotificationClick to RightSidebar
+        handleNotificationClick={handleNotificationClick}
       />
     </div>
   );

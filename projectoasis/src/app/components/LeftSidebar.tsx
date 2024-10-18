@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { FaFolder, FaBook, FaSun, FaSatellite, FaTrash, FaChartLine, FaGlobe, FaArrowRight, FaArrowLeft, FaRocket, FaMeteor } from 'react-icons/fa';
+import { FaBook, FaSun, FaSatellite, FaTrash, FaChartLine, FaGlobe, FaArrowRight, FaArrowLeft, FaRocket, FaMeteor } from 'react-icons/fa';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -16,8 +16,8 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
 
   const [activeCategory, setActiveCategory] = useState<string>('Overview');
   const [activeTab, setActiveTab] = useState<string>('favorites');
-  const [favorites, setFavorites] = useState<string[]>(['Overview', 'Projects']);
-  const [recentlyVisited, setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
+  const [favorites, _setFavorites] = useState<string[]>(['Overview', 'Projects']);
+  const [recentlyVisited, _setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);  // Track hovered item for tooltips
 
   const categories = [

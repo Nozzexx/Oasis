@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 from api import nasa_api
-
+from database.postgres_connection import store_data
 
 # Set up logging for CloudWatch
 logger = logging.getLogger()
@@ -23,7 +23,11 @@ def process_neo_data(neo_data):
          for asteroid in date),
         default=0
     )
-    return neo_count, potentially_hazardous, closest_approach
+    return {
+        'count': neo_count,
+        'hazardous_count': potentially_hazardous,
+        'closest_approach': closest_approach
+    }
 
 def process_cme_data(cme_data):
     """Process and extract relevant information from CME data."""
@@ -38,7 +42,11 @@ def process_cme_data(cme_data):
         fastest_speed = "N/A"
         latest_time = "N/A"
     
-    return cme_count, fastest_speed, latest_time
+    return {
+        'count': cme_count,
+        'fastest_speed': fastest_speed,
+        'latest_time': latest_time
+    }
 
 def lambda_handler(event, context):
     logger.info("Starting Python Retriever for Integrated Space Metrics")
@@ -50,38 +58,34 @@ def lambda_handler(event, context):
         
         # Process NEO data
         logger.info("Processing Near Earth Objects (NEO) Data")
-        neo_count, hazardous_count, closest_approach = process_neo_data(nasa_data['neo'])
+        neo_processed = process_neo_data(nasa_data['neo'])
         
-        logger.info(f"Total near-Earth objects in the next 7 days: {neo_count}")
-        logger.warning(f"Number of potentially hazardous asteroids: {hazardous_count}")
-        logger.critical(f"Closest asteroid approach: {closest_approach:.2f} km")
+        logger.info(f"Total near-Earth objects in the next 7 days: {neo_processed['count']}")
+        logger.warning(f"Number of potentially hazardous asteroids: {neo_processed['hazardous_count']}")
+        logger.critical(f"Closest asteroid approach: {neo_processed['closest_approach']:.2f} km")
         
         # Process CME data
         logger.info("Processing Coronal Mass Ejection (CME) Data")
-        cme_count, fastest_cme_speed, latest_cme_time = process_cme_data(nasa_data['cme'])
+        cme_processed = process_cme_data(nasa_data['cme'])
         
-        logger.info(f"Total Coronal Mass Ejections in the last 30 days: {cme_count}")
-        logger.warning(f"Speed of fastest CME: {fastest_cme_speed} km/s")
-        logger.info(f"Time of latest CME: {latest_cme_time}")
+        logger.info(f"Total Coronal Mass Ejections in the last 30 days: {cme_processed['count']}")
+        logger.warning(f"Speed of fastest CME: {cme_processed['fastest_speed']} km/s")
+        logger.info(f"Time of latest CME: {cme_processed['latest_time']}")
+        
+        # Store data in the database
+        logger.info("Storing processed data in the database")
+        store_data(neo_processed, cme_processed)
         
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'neo': {
-                    'count': neo_count,
-                    'hazardous_count': hazardous_count,
-                    'closest_approach': closest_approach
-                },
-                'cme': {
-                    'count': cme_count,
-                    'fastest_speed': fastest_cme_speed,
-                    'latest_time': latest_cme_time
-                }
+                'neo': neo_processed,
+                'cme': cme_processed
             })
         }
         
     except Exception as e:
-        logger.error(f"Error fetching or processing NASA data: {str(e)}")
+        logger.error(f"Error in lambda execution: {str(e)}")
         return {
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})

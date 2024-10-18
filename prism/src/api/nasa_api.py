@@ -1,72 +1,56 @@
 import requests
-from datetime import datetime, timedelta
-from config import NASA_API_KEY
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+import os
+import logging
 
-BASE_URL_NEO = "https://api.nasa.gov/neo/rest/v1"
-BASE_URL_DONKI = "https://api.nasa.gov/DONKI"
+logger = logging.getLogger()
 
-def fetch_neo_data(start_date=None, end_date=None):
-    """
-    Fetch Near Earth Object data from NASA's NeoWs API.
-    If no dates are provided, it fetches data for today and the next 7 days.
-    """
-    if start_date is None:
-        start_date = datetime.now().strftime("%Y-%m-%d")
-    if end_date is None:
-        end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+NASA_API_KEY = os.environ['NASA_API_KEY']
+BASE_URL = "https://api.nasa.gov"
 
-    endpoint = f"{BASE_URL_NEO}/feed"
-    params = {
-        "start_date": start_date,
-        "end_date": end_date,
-        "api_key": NASA_API_KEY
-    }
-    
-    response = requests.get(endpoint, params=params)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to fetch NEO data: {response.status_code}")
-
-def fetch_cme_data(start_date=None, end_date=None):
-    """
-    Fetch Coronal Mass Ejection (CME) data from NASA's DONKI API.
-    If no dates are provided, it fetches data for the last 30 days.
-    """
-    if start_date is None:
-        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
-    if end_date is None:
-        end_date = datetime.now().strftime("%Y-%m-%d")
-
-    endpoint = f"{BASE_URL_DONKI}/CME"
-    params = {
-        "startDate": start_date,
-        "endDate": end_date,
-        "api_key": NASA_API_KEY
-    }
-    
-    response = requests.get(endpoint, params=params)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        raise Exception(f"Failed to fetch CME data: {response.status_code}")
+def requests_retry_session(
+    retries=3,
+    backoff_factor=0.3,
+    status_forcelist=(500, 502, 504),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
 
 def fetch_data():
-    """
-    Fetch data from NASA APIs. Fetches both NEO and CME data.
-    """
-    return {
-        "neo": fetch_neo_data(),
-        "cme": fetch_cme_data()
-    }
-
-if __name__ == "__main__":
-    # This block allows you to test the functions independently
     try:
-        data = fetch_data()
-        print("NEO data sample:", data["neo"]["element_count"])
-        print("CME data sample:", len(data["cme"]))
-    except Exception as e:
-        print(f"Error: {str(e)}")
+        session = requests_retry_session()
+        
+        # NEO data
+        neo_response = session.get(
+            f"{BASE_URL}/neo/rest/v1/feed",
+            params={"api_key": NASA_API_KEY},
+            timeout=30  # Increase timeout to 30 seconds
+        )
+        neo_response.raise_for_status()
+        neo_data = neo_response.json()
+
+        # CME data
+        cme_response = session.get(
+            f"{BASE_URL}/DONKI/CME",
+            params={"api_key": NASA_API_KEY},
+            timeout=30  # Increase timeout to 30 seconds
+        )
+        cme_response.raise_for_status()
+        cme_data = cme_response.json()
+
+        return {"neo": neo_data, "cme": cme_data}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching NASA data: {str(e)}")
+        raise

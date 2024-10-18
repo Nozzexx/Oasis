@@ -17,7 +17,7 @@ export default function Topbar({
   toggleRightSidebar,
 }: TopbarProps) {
   const [showExportOptions, setShowExportOptions] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(0); // Example notification count
+  const [notificationsCount, _setNotificationsCount] = useState(0);
 
   // Handle click on the notification bell
   const handleBellClick = () => {
