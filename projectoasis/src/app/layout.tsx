@@ -1,4 +1,4 @@
-import type { Metadata } from "next"; //Test
+import type { Metadata } from "next"; //Test 01
 import localFont from "next/font/local";
 import '../app/globals.css';
 
