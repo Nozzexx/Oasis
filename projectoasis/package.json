@@ -28,5 +28,40 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.12",
     "typescript": "^5"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nozzexx/OASISFrontEnd.git"
+  },
+  "keywords": [
+    "space",
+    "nasa",
+    "noaa",
+    "analytics",
+    "satellite",
+    "tracking",
+    "nextjs",
+    "react"
+  ],
+  "author": "Nozzexx",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Nozzexx/OASISFrontEnd/issues"
+  },
+  "homepage": "https://github.com/Nozzexx/OASISFrontEnd#readme",
+  "resolutions": {
+    "@types/react": "^18"
+  },
+  "overrides": {
+    "@types/react": "^18"
   }
 }

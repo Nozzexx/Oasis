@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  output: 'standalone',
+  distDir: '.next',
   images: {
-      unoptimized: true,
-  },
+    unoptimized: true // This is important for Amplify deployment
+  }
 }
 
-export default nextConfig;
+export default nextConfig
