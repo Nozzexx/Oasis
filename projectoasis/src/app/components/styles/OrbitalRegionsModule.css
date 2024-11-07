@@ -1,0 +1,23 @@
+.orbital-regions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; /* Full viewport height */
+    padding: 20px; /* Optional padding */
+  }
+  
+  .svg-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Full width */
+    max-width: 1000px; /* Adjust to prevent cutting off */
+    aspect-ratio: 1; /* Maintain square shape */
+  }
+  
+  .hovered {
+    fill: rgba(33, 150, 243, 0.2); /* Light blue for hover effect */
+    cursor: pointer;
+  }
+  
