@@ -16,9 +16,6 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
   const appVersion = process.env.NEXT_PUBLIC_OASIS_APP_VERSION || ' Unknown';
 
   const [activeCategory, setCategory] = useState<string>('Overview');
-  const [activeTab, setActiveTab] = useState<string>('favorites');
-  const [favorites, _setFavorites] = useState<string[]>(['Overview', 'Projects']);
-  const [recentlyVisited, _setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);  // Track hovered item for tooltips
 
   const categories = [
