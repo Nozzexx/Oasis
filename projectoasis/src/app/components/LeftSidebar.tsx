@@ -8,13 +8,15 @@ interface SidebarProps {
   collapsed: boolean;
   toggleCollapse: () => void;
   setActiveModule: (module: string) => void;
+  setActiveCategory: (name: string) => void;
 }
 
-export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule }: SidebarProps) {
+export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule, setActiveCategory }: SidebarProps) {
 
   const appVersion = process.env.NEXT_PUBLIC_OASIS_APP_VERSION || ' Unknown';
 
-  const [activeCategory, setActiveCategory] = useState<string>('Overview');
+  // const [activeCategory, setActiveCategory] = useState<string>('Overview');
+  const activeCategory = 'Dashboard';
   const [activeTab, setActiveTab] = useState<string>('favorites');
   const [favorites, _setFavorites] = useState<string[]>(['Overview', 'Projects']);
   const [recentlyVisited, _setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
@@ -50,51 +52,6 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
             {collapsed ? <FaArrowRight /> : <FaArrowLeft />}
           </button>
         </div>
-
-        {/* Tabs for Favorites and Recently */}
-        {!collapsed && (
-          <div className="mb-8">
-            <div className="flex space-x-4">
-              <button
-                className={`text-white ${
-                  activeTab === 'favorites'
-                    ? 'border-b-2 border-accent text-white'
-                    : 'text-gray-400'
-                }`}
-                onClick={() => setActiveTab('favorites')}
-              >
-                Favorites
-              </button>
-              <button
-                className={`text-white ${
-                  activeTab === 'recently'
-                    ? 'border-b-2 border-accent text-white'
-                    : 'text-gray-400'
-                }`}
-                onClick={() => setActiveTab('recently')}
-              >
-                Recently
-              </button>
-            </div>
-
-            {/* Scrollable Content Based on Active Tab */}
-            <div className="h-24 overflow-y-auto mt-2">
-              {activeTab === 'favorites' ? (
-                <ul className="space-y-2">
-                  {favorites.map((item) => (
-                    <li key={item} className="text-white">{item}</li>
-                  ))}
-                </ul>
-              ) : (
-                <ul className="space-y-2">
-                  {recentlyVisited.map((item) => (
-                    <li key={item} className="text-white">{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Title for Categories */}
         {!collapsed && <h2 className="text-white text-lg font-semibold mb-4">Categories</h2>}

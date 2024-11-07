@@ -22,6 +22,8 @@ export default function Layout({ children }: LayoutProps) {
   const [isRightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const [notificationsCount, _setNotificationsCount] = useState(0);
   const [activeModule, setActiveModule] = useState('DashboardModule');
+  const [activeCategory, setActiveCategory] = useState('Dashboard');
+
   const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function Layout({ children }: LayoutProps) {
         collapsed={isLeftSidebarCollapsed}
         toggleCollapse={() => setLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
         setActiveModule={setActiveModule}
+        setActiveCategory={setActiveCategory}
       />
       <div className="flex flex-col flex-1">
         <Topbar
@@ -72,6 +75,7 @@ export default function Layout({ children }: LayoutProps) {
           toggleDarkMode={() => setDarkMode(!darkMode)}
           isRightSidebarCollapsed={isRightSidebarCollapsed}
           toggleRightSidebar={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
+          activeModule={activeCategory}
         />
         <main
           className="flex-1 overflow-y-auto bg-[#1c1c1c] relative"
