@@ -15,8 +15,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
 
   const appVersion = process.env.NEXT_PUBLIC_OASIS_APP_VERSION || ' Unknown';
 
-  // const [activeCategory, setActiveCategory] = useState<string>('Overview');
-  const activeCategory = 'Dashboard';
+  const [activeCategory, setCategory] = useState<string>('Overview');
   const [activeTab, setActiveTab] = useState<string>('favorites');
   const [favorites, _setFavorites] = useState<string[]>(['Overview', 'Projects']);
   const [recentlyVisited, _setRecentlyVisited] = useState<string[]>(['Data Display', 'Space Weather', 'Risk Assessment']);
@@ -68,6 +67,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
               >
                 <button
                   onClick={() => {
+                    setCategory(category.name);
                     setActiveCategory(category.name);
                     setActiveModule(category.module);
                   }}
