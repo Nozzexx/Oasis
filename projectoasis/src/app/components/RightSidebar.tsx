@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp, FaArrowLeft, FaArrowRight, FaBell, FaCloudDownloadAlt, FaExclamationCircle, FaBook, FaTimes } from 'react-icons/fa';
 import Image from 'next/image';
 
@@ -51,6 +51,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
   const [viewAllNotifications, setViewAllNotifications] = useState(false);
   const [viewAllNews, setViewAllNews] = useState(false);
   const [viewAllEducation, setViewAllEducation] = useState(false);
+  const [spaceNews, setSpaceNews] = useState([])
 
   const toggleSection = (section: string) => {
     switch (section) {
@@ -85,6 +86,25 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
   const handleCloseAboutUsModal = () => {
     setIsAboutModalOpen(false); // Close the About Us modal
   };
+
+  useEffect(() => {
+    async function fetchSpaceNews() {
+      try {
+        const response = await fetch('https://api.spaceflightnewsapi.net/v4/articles?_limit=5');
+        const data = await response.json();
+        console.log("Fetched data:", data); 
+        setSpaceNews(data.results.map(article => ({
+          icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />,
+          title: article.title,
+          time: new Date(article.published_at).toLocaleTimeString(),
+          details: article.summary,
+        })));
+      } catch (error) {
+        console.error("Error fetching space news:", error);
+      }
+    }
+    fetchSpaceNews();
+  }, []);
 
   return (
     <div className={`h-screen bg-[#1c1c1c] p-4 transition-all duration-300 flex flex-col justify-start ${collapsed ? 'w-16' : 'w-72'} border-l border-gray-600`}>
@@ -130,7 +150,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </div>
             {isNewsUpdatesOpen && (
               <ul className="mt-2 space-y-2">
-                {(viewAllNews ? newsUpdates : newsUpdates.slice(0, 4)).map((item, index) => (
+                {(viewAllNews ? newsUpdates : spaceNews.slice(0, 4)).map((item, index) => (
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
