@@ -5,10 +5,6 @@ import requests
 import pg8000
 from datetime import datetime
 from typing import Dict, Any, List
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logger = logging.getLogger()
@@ -39,7 +35,7 @@ class NASANeoWsAPI:
         }
         
         try:
-            response = self.session.get(base_url, params=params, timeout=(5, 30))
+            response = self.session.get(base_url, params=params, timeout=(60, 90))
             response.raise_for_status()
             logger.info(f"Fetched data for date: {start_date}")
             return response.json()
@@ -79,6 +75,51 @@ class NASANeoWsAPI:
             raise
         return sanitized_data
 
+class SpaceTrackAPI:
+    """Space-Track.org API implementation"""
+    def __init__(self):
+        self.username = os.getenv('SPACE_TRACK_USERNAME')
+        self.password = os.getenv('SPACE_TRACK_PASSWORD')
+        if not all([self.username, self.password]):
+            raise ValueError("SPACE_TRACK credentials not set in environment variables.")
+        self.session = requests.Session()
+        self.base_url = "https://www.space-track.org"
+        self.authenticated = False
+
+    def authenticate(self) -> None:
+        """Authenticates with Space-Track.org"""
+        auth_url = f"{self.base_url}/ajaxauth/login"
+        credentials = {
+            'identity': self.username,
+            'password': self.password
+        }
+        try:
+            response = self.session.post(auth_url, data=credentials, timeout=(60, 90))
+            response.raise_for_status()
+            self.authenticated = True
+            logger.info("Successfully authenticated with Space-Track.org")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error authenticating with Space-Track.org: {str(e)}")
+            raise
+
+    def fetch_data(self) -> List[Dict[str, Any]]:
+        """Fetches satellite catalog data from Space-Track.org"""
+        if not self.authenticated:
+            self.authenticate()
+
+        query_url = f"{self.base_url}/basicspacedata/query/class/satcat"
+        try:
+            response = self.session.get(query_url, timeout=(60, 90))
+            response.raise_for_status()
+            logger.info("Successfully fetched satellite catalog data")
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error fetching Space-Track data: {str(e)}")
+            raise
+        finally:
+            # Logout after fetching data
+            self.session.get(f"{self.base_url}/ajaxauth/logout")
+
 class DatabaseConnection:
     """Manages PostgreSQL database connections and operations"""
     def __init__(self):
@@ -109,7 +150,7 @@ class DatabaseConnection:
         except Exception as e:
             logger.error(f"Error connecting to database: {str(e)}")
             raise
-
+        
     def disconnect(self) -> None:
         """Closes database connection"""
         try:
@@ -167,22 +208,48 @@ class DataProcessor:
                 miss_distance_km DOUBLE PRECISION,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS sat_cat (
+                norad_cat_id VARCHAR(50) PRIMARY KEY,
+                intldes VARCHAR(50),
+                object_type VARCHAR(50),
+                satname VARCHAR(255),
+                country VARCHAR(50),
+                launch_date DATE,
+                site VARCHAR(50),
+                decay_date DATE,
+                period DOUBLE PRECISION,
+                inclination DOUBLE PRECISION,
+                apogee INTEGER,
+                perigee INTEGER,
+                rcs_value DOUBLE PRECISION,
+                rcs_size VARCHAR(20),
+                current BOOLEAN,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         END $$;
         """
         self.db.execute_query(schema)
 
-    def process_and_store_data(self, date: str = None) -> int:
+    def process_and_store_data(self, date: str = None) -> dict:
         """Processes and stores NASA NEO data"""
+        result = {
+            'success': False,
+            'records_processed': 0,
+            'error': None
+        }
+
         try:
             self.db.connect()
             self.setup_database()
-            
+
             # Fetch and process data
             raw_data = self.nasa_api.fetch_data(date)
             processed_data = self.nasa_api.sanitize_data(raw_data)
-            
+
             records_processed = 0
-            
+
             # Store data
             for item in processed_data:
                 try:
@@ -200,7 +267,7 @@ class DataProcessor:
                         estimated_diameter_km = EXCLUDED.estimated_diameter_km,
                         is_potentially_hazardous = EXCLUDED.is_potentially_hazardous
                     """
-                    
+
                     neo_params = [
                         item['id'],
                         item['name'],
@@ -208,10 +275,10 @@ class DataProcessor:
                         float(item['estimated_diameter_km']),
                         bool(item['is_potentially_hazardous'])
                     ]
-                    
+
                     self.db.execute_query(insert_neo, neo_params)
                     records_processed += 1
-                    
+
                     # Insert approach data
                     for approach in item['close_approach_data']:
                         insert_approach = """
@@ -220,48 +287,169 @@ class DataProcessor:
                         VALUES 
                         (%s, %s, %s, %s)
                         """
-                        
+
                         approach_params = [
                             item['id'],
                             datetime.strptime(approach['close_approach_date'], '%Y-%m-%d').date(),
                             float(approach['relative_velocity_kph']),
                             float(approach['miss_distance_km'])
                         ]
-                        
+
                         self.db.execute_query(insert_approach, approach_params)
-                        
+
                 except Exception as e:
                     logger.error(f"Error processing item {item['id']}: {str(e)}")
                     continue
-            
+
             logger.info(f"Processed {records_processed} NEOs successfully.")
-            return records_processed
-            
+            result['success'] = True
+            result['records_processed'] = records_processed
+
         except Exception as e:
-            logger.error(f"Error processing data: {str(e)}")
-            raise
+            logger.error(f"Error processing NASA NEO data: {str(e)}")
+            result['error'] = str(e)
         finally:
             self.db.disconnect()
+
+        return result
+
+    def process_and_store_satellite_data(self) -> dict:
+        """Processes and stores Space-Track satellite catalog data"""
+        result = {
+            'success': False,
+            'records_processed': 0,
+            'error': None
+        }
+
+        try:
+            space_track = SpaceTrackAPI()
+            raw_data = space_track.fetch_data()
+            records_processed = 0
+
+            self.db.connect()
+            self.setup_database()
+
+            for sat in raw_data:
+                try:
+                    insert_sat = """
+                    INSERT INTO sat_cat 
+                    (norad_cat_id, intldes, object_type, satname, country, 
+                    launch_date, site, decay_date, period, inclination, 
+                    apogee, perigee, rcs_value, rcs_size, current)
+                    VALUES 
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (norad_cat_id) DO UPDATE SET
+                        intldes = EXCLUDED.intldes,
+                        object_type = EXCLUDED.object_type,
+                        satname = EXCLUDED.satname,
+                        country = EXCLUDED.country,
+                        launch_date = EXCLUDED.launch_date,
+                        site = EXCLUDED.site,
+                        decay_date = EXCLUDED.decay_date,
+                        period = EXCLUDED.period,
+                        inclination = EXCLUDED.inclination,
+                        apogee = EXCLUDED.apogee,
+                        perigee = EXCLUDED.perigee,
+                        rcs_value = EXCLUDED.rcs_value,
+                        rcs_size = EXCLUDED.rcs_size,
+                        current = EXCLUDED.current,
+                        updated_at = CURRENT_TIMESTAMP
+                    """
+
+                    sat_params = [
+                        sat.get('NORAD_CAT_ID'),
+                        sat.get('INTLDES'),
+                        sat.get('OBJECT_TYPE'),
+                        sat.get('SATNAME'),
+                        sat.get('COUNTRY'),
+                        sat.get('LAUNCH'),
+                        sat.get('SITE'),
+                        sat.get('DECAY'),
+                        float(sat.get('PERIOD')) if sat.get('PERIOD') else None,
+                        float(sat.get('INCLINATION')) if sat.get('INCLINATION') else None,
+                        int(sat.get('APOGEE')) if sat.get('APOGEE') else None,
+                        int(sat.get('PERIGEE')) if sat.get('PERIGEE') else None,
+                        float(sat.get('RCSVALUE')) if sat.get('RCSVALUE') else None,
+                        sat.get('RCS_SIZE'),
+                        sat.get('CURRENT') == 'Y'
+                    ]
+
+                    self.db.execute_query(insert_sat, sat_params)
+                    records_processed += 1
+
+                except Exception as e:
+                    logger.error(f"Error processing satellite {sat.get('NORAD_CAT_ID')}: {str(e)}")
+                    continue
+
+            logger.info(f"Processed {records_processed} satellites successfully.")
+            result['success'] = True
+            result['records_processed'] = records_processed
+
+        except Exception as e:
+            logger.error(f"Error processing satellite data: {str(e)}")
+            result['error'] = str(e)
+        finally:
+            self.db.disconnect()
+
+        return result
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Main Lambda handler function"""
     try:
         # Get date from event or use current date
         process_date = event.get('date')
-        
-        # Initialize and run processor
+
+        # Initialize processor
         processor = DataProcessor()
-        records_processed = processor.process_and_store_data(process_date)
-        
+
+        # Process both NEO and satellite data
+        results = {
+            'nasa_neo': processor.process_and_store_data(process_date),
+            'space_track': processor.process_and_store_satellite_data()
+        }
+
+        # Determine overall success
+        all_failed = all(not result['success'] for result in results.values())
+
+        if all_failed:
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': 'All API processing failed',
+                    'date': process_date or datetime.now().strftime('%Y-%m-%d'),
+                    'details': {
+                        'nasa_neo': {
+                            'success': False,
+                            'error': results['nasa_neo']['error']
+                        },
+                        'space_track': {
+                            'success': False,
+                            'error': results['space_track']['error']
+                        }
+                    }
+                })
+            }
+
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'message': 'Data processing completed successfully',
+                'message': 'Processing completed',
                 'date': process_date or datetime.now().strftime('%Y-%m-%d'),
-                'records_processed': records_processed
+                'results': {
+                    'nasa_neo': {
+                        'success': results['nasa_neo']['success'],
+                        'records_processed': results['nasa_neo']['records_processed'],
+                        'error': results['nasa_neo']['error']
+                    },
+                    'space_track': {
+                        'success': results['space_track']['success'],
+                        'records_processed': results['space_track']['records_processed'],
+                        'error': results['space_track']['error']
+                    }
+                }
             })
         }
-        
+
     except Exception as e:
         logger.error(f"Lambda execution failed: {str(e)}")
         return {
