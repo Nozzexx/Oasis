@@ -35,6 +35,15 @@ interface DashboardData {
     count: number;
     percentageChange: number;
   }
+  yearComparison: {
+    month: string;
+    current_year_count: number;
+    prior_year_count: number;
+  }[];
+  topCountries: {
+    country: string;
+    active_payload_count: number;
+  }[];
 }
 
 // Sample data for the charts (keep existing data for now)
@@ -74,18 +83,10 @@ const activeWeatherEventsData = [
   { type: 'Particle Storms', status: 'Severe', color: '#f94a4a' },
 ];
 
-const satellitesByOwnerData = [
-  { owner: 'NASA', satellites: 120 },
-  { owner: 'NOAA', satellites: 60 },
-  { owner: 'SpaceX', satellites: 1500 },
-  { owner: 'OneWeb', satellites: 400 },
-  { owner: 'European Space Agency', satellites: 80 },
-  { owner: 'Others', satellites: 100 },
-];
-
 const DashboardModule: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [lineChartData, setLineChartData] = useState<Array<{ name: string; thisYear: number; lastYear: number }>>([]);
+  const [satellitesByOwnerData, setSatellitesByOwnerData] = useState<Array<{ country: string; active_payload_count: number }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -119,6 +120,9 @@ const DashboardModule: React.FC = () => {
           lastYear: item.prior_year_count,
         }));
         setLineChartData(transformedLineChartData);
+
+        // Set `topCountries` data for the "Satellites by Owner" chart
+        setSatellitesByOwnerData(result.data.topCountries);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
         console.error('Error fetching dashboard data:', err);
@@ -187,7 +191,6 @@ const DashboardModule: React.FC = () => {
                   }`}
             </p>
           </div>
-         {/* Replace this entire card */}
           <div className="bg-[#f9b3b1] text-black p-4 rounded shadow">
             <h3 className="text-lg font-semibold">Active Satellites</h3>
             <p className="text-3xl font-bold">
@@ -384,29 +387,35 @@ const DashboardModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Satellites by Owner Chart */}
+        {/* Satellites by Country Chart */}
         <div className="bg-[#1f1f24] p-6 rounded shadow mt-6">
-          <h3 className="text-xl font-bold text-white">Satellites by Owner</h3>
+          <h3 className="text-xl font-bold text-white">Satellites by Country</h3>
           <div className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center" style={{ height: '300px' }}>
-            <ResponsiveContainer width="95%" height={250}>
-              <BarChart data={satellitesByOwnerData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey="owner" stroke="#c0c0df" />
-                <YAxis stroke="#c0c0df" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1f1f24',
-                    borderColor: '#36a2eb',
-                    borderRadius: '8px',
-                    color: '#ffffff'
-                  }}
-                  itemStyle={{
-                    color: '#ffffff'
-                  }}
-                />
-                <Bar dataKey="satellites" fill="#36a2eb" radius={[10, 10, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {loading ? (
+              <p className="text-white">Loading...</p>
+            ) : error ? (
+              <p className="text-red-500">{error}</p>
+            ) : (
+              <ResponsiveContainer width="95%" height={250}>
+                <BarChart data={satellitesByOwnerData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis dataKey="country" stroke="#c0c0df" />
+                  <YAxis stroke="#c0c0df" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f1f24',
+                      borderColor: '#36a2eb',
+                      borderRadius: '8px',
+                      color: '#ffffff'
+                    }}
+                    itemStyle={{
+                      color: '#ffffff'
+                    }}
+                  />
+                  <Bar dataKey="active_payload_count" fill="#36a2eb" radius={[10, 10, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

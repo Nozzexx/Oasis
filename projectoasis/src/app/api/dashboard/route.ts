@@ -9,6 +9,11 @@ interface MonthData {
   prior_year_count: number;
 }
 
+interface CountryData {
+  country: string;
+  active_payload_count: number;
+}
+
 export async function GET() {
   try {
     // Query for active satellites (payloads)
@@ -67,8 +72,29 @@ export async function GET() {
           month;
     `);
 
+    // Query for the top 10 countries by active payloads
+    const activePayloadsByCountryQuery = await pool.query(`
+      SELECT 
+          country,
+          COUNT(*) AS active_payload_count
+      FROM 
+          sat_cat
+      WHERE 
+          object_type = 'PAYLOAD'
+          AND (decay_date IS NULL OR decay_date > CURRENT_DATE)
+      GROUP BY 
+          country
+      ORDER BY 
+          active_payload_count DESC
+      LIMIT 25;
+    `);
+
     const currentYearData: { month: string; current_year_count: number }[] = currentYearQuery.rows;
     const priorYearData: { month: string; prior_year_count: number }[] = priorYearQuery.rows;
+    const activePayloadsByCountryData: CountryData[] = activePayloadsByCountryQuery.rows.map(row => ({
+      country: row.country,
+      active_payload_count: parseInt(row.active_payload_count),
+    }));
 
     // Create a map for quick look-up of month data
     const priorYearMap = new Map(priorYearData.map(item => [item.month, item.prior_year_count]));
@@ -118,7 +144,8 @@ export async function GET() {
           count: totalTrackedObjects,
           percentageChange: totalChange
         },
-        yearComparison: combinedData
+        yearComparison: combinedData,
+        topCountries: activePayloadsByCountryData
       }
     });
 
