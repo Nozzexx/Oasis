@@ -122,7 +122,7 @@ export async function GET() {
     // Calculate percentage changes (using static values for now)
     const satelliteChange = -0.03;
     const debrisChange = 1.02;
-    const rocketChange = 5.03;
+    const rocketChange = 1.33;
     const totalChange = 6.08;
 
     return NextResponse.json({
