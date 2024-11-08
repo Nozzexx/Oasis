@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp, FaArrowLeft, FaArrowRight, FaBell, FaCloudDownloadAlt, FaExclamationCircle, FaBook, FaTimes } from 'react-icons/fa';
 import Image from 'next/image';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 interface SidebarItem {
   icon: JSX.Element;
   title: string;
   time: string;
   details: string;
+  fullDetails: string;
 }
 
 interface RightSidebarProps {
@@ -24,14 +26,6 @@ const notifications = [
   { icon: <FaCloudDownloadAlt color="white"/>, title: 'Another Update!', time: '12 hours ago', details: 'Details about another update.' },
   { icon: <FaCloudDownloadAlt color="white"/>, title: 'Yet Another Update!', time: '12 hours ago', details: 'Details about yet another update.' },
   { icon: <FaCloudDownloadAlt color="white"/>, title: 'Last Update!', time: '12 hours ago', details: 'Details about the last update.' },
-];
-
-const newsUpdates = [
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'NASA Heads to the Moon...', time: 'Just now', details: 'NASA is planning a new mission to the moon...' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'NOAA names Tropical Storm...', time: '59 minutes ago', details: 'NOAA has named the latest tropical storm.' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'New Discovery...', time: '3 hours ago', details: 'New discoveries in space exploration.' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'Astronomers Find...', time: '4 hours ago', details: 'Astronomers find a new exoplanet.' },
-  { icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />, title: 'Space X Update...', time: '12 hours ago', details: 'SpaceX announces new launch plans.' },
 ];
 
 const education = [
@@ -96,8 +90,11 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
         setSpaceNews(data.results.map(article => ({
           icon: <Image src="/assets/images/OASIS_LOGO.png" width={20} height={20} alt="OASIS logo" />,
           title: article.title,
-          time: new Date(article.published_at).toLocaleTimeString(),
-          details: article.summary,
+          time: formatDistanceToNowStrict(new Date(article.published_at), { addSuffix: true }),
+          details: article.summary.length > 100
+          ? `${article.summary.substring(0, 100)}... <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">Read more</a>`
+          : `${article.summary} <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">Read more</a>`, 
+          fullDetails: `${article.summary} <br/><a href="${article.url}" target="_blank" rel="noopener noreferrer" class="text-blue-500 underline">Read full article</a>`, // Full description for modal
         })));
       } catch (error) {
         console.error("Error fetching space news:", error);
@@ -150,16 +147,16 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </div>
             {isNewsUpdatesOpen && (
               <ul className="mt-2 space-y-2">
-                {(viewAllNews ? newsUpdates : spaceNews.slice(0, 4)).map((item, index) => (
+                {(viewAllNews ? spaceNews : spaceNews.slice(0, 4)).map((item, index) => (
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
-                    <div className="flex-grow">
-                      <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
+                    <div className="flex-grow overflow-hidden">
+                      <h3 className="text-sm font-semibold truncate">{item.title}</h3>
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </div>
                   </li>
                 ))}
-                {newsUpdates.length > 4 && (
+                {spaceNews.length > 4 && (
                   <div className="text-xs text-blue-400 cursor-pointer hover:underline" onClick={() => setViewAllNews(!viewAllNews)}>
                     {viewAllNews ? 'View Less' : 'View All'}
                   </div>
@@ -205,7 +202,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             </button>
             <h2 className="text-2xl font-bold text-white mb-4">{selectedItem.title}</h2>
             <div className="max-h-80 overflow-y-auto">
-              <p className="text-gray-200">{selectedItem.details}</p>
+              <p className="text-gray-700" dangerouslySetInnerHTML={{ __html: selectedItem.fullDetails }}/>
             </div>
           </div>
         </div>
