@@ -8,6 +8,7 @@ interface TopbarProps {
   toggleDarkMode: () => void;
   isRightSidebarCollapsed: boolean;
   toggleRightSidebar: () => void;
+  activeModule: string;
 }
 
 export default function Topbar({
@@ -15,6 +16,7 @@ export default function Topbar({
   toggleDarkMode,
   isRightSidebarCollapsed,
   toggleRightSidebar,
+  activeModule,
 }: TopbarProps) {
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [notificationsCount, _setNotificationsCount] = useState(0);
@@ -41,7 +43,7 @@ export default function Topbar({
         <FaStar className="text-xl" />
         <span className="text-sm">Dashboards</span>
         <span className="text-sm">/</span>
-        <span className="text-sm font-bold">Default</span>
+        <span className="text-sm font-bold">{activeModule}</span>
       </div>
 
       {/* Center section */}

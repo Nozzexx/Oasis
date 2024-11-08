@@ -18,12 +18,12 @@ interface RightSidebarProps {
 }
 
 const notifications = [
-  { icon: <FaBell />, title: 'You fixed a bug.', time: 'Just now', details: 'Detailed information about the bug fix.' },
-  { icon: <FaExclamationCircle />, title: 'Dataset Updated.', time: '59 minutes ago', details: 'Details about the dataset update.' },
-  { icon: <FaCloudDownloadAlt />, title: 'A New Update is Available!', time: '12 hours ago', details: 'Details about the latest update.' },
-  { icon: <FaCloudDownloadAlt />, title: 'Another Update!', time: '12 hours ago', details: 'Details about another update.' },
-  { icon: <FaCloudDownloadAlt />, title: 'Yet Another Update!', time: '12 hours ago', details: 'Details about yet another update.' },
-  { icon: <FaCloudDownloadAlt />, title: 'Last Update!', time: '12 hours ago', details: 'Details about the last update.' },
+  { icon: <FaBell color="white"/>, title: 'You fixed a bug.', time: 'Just now', details: 'Detailed information about the bug fix.' },
+  { icon: <FaExclamationCircle color="white"/>, title: 'Dataset Updated.', time: '59 minutes ago', details: 'Details about the dataset update.' },
+  { icon: <FaCloudDownloadAlt color="white"/>, title: 'A New Update is Available!', time: '12 hours ago', details: 'Details about the latest update.' },
+  { icon: <FaCloudDownloadAlt color="white"/>, title: 'Another Update!', time: '12 hours ago', details: 'Details about another update.' },
+  { icon: <FaCloudDownloadAlt color="white"/>, title: 'Yet Another Update!', time: '12 hours ago', details: 'Details about yet another update.' },
+  { icon: <FaCloudDownloadAlt color="white"/>, title: 'Last Update!', time: '12 hours ago', details: 'Details about the last update.' },
 ];
 
 const newsUpdates = [
@@ -35,11 +35,11 @@ const newsUpdates = [
 ];
 
 const education = [
-  { icon: <FaBook />, title: 'Getting Started with OASIS...', time: 'Just now', details: 'Learn how to get started with OASIS...' },
-  { icon: <FaBook />, title: 'Understanding NEOs...', time: '59 minutes ago', details: 'Understanding Near Earth Objects (NEOs)...' },
-  { icon: <FaBook />, title: 'Satellite Tracking 101...', time: '3 hours ago', details: 'Basics of satellite tracking and its importance.' },
-  { icon: <FaBook />, title: 'Space Debris Management...', time: '4 hours ago', details: 'How to manage space debris and keep space safe.' },
-  { icon: <FaBook />, title: 'Climate Effects on Space...', time: '12 hours ago', details: 'Impact of climate on space weather and satellites.' },
+  { icon: <FaBook color="white"/>, title: 'Getting Started with OASIS...', time: 'Just now', details: 'Learn how to get started with OASIS...' },
+  { icon: <FaBook color="white"/>, title: 'Understanding NEOs...', time: '59 minutes ago', details: 'Understanding Near Earth Objects (NEOs)...' },
+  { icon: <FaBook color="white"/>, title: 'Satellite Tracking 101...', time: '3 hours ago', details: 'Basics of satellite tracking and its importance.' },
+  { icon: <FaBook color="white"/>, title: 'Space Debris Management...', time: '4 hours ago', details: 'How to manage space debris and keep space safe.' },
+  { icon: <FaBook color="white"/>, title: 'Climate Effects on Space...', time: '12 hours ago', details: 'Impact of climate on space weather and satellites.' },
 ];
 
 export default function RightSidebar({ collapsed, toggleCollapse, handleNotificationClick }: RightSidebarProps) {
@@ -120,7 +120,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
           <div className="mb-4">
             <div className="flex justify-between cursor-pointer text-white" onClick={() => toggleSection('notifications')}>
               <h2 className="text-lg font-semibold">Notifications</h2>
-              {isNotificationsOpen ? <FaChevronUp /> : <FaChevronDown />}
+              {isNotificationsOpen ? <FaChevronUp/> : <FaChevronDown />}
             </div>
             {isNotificationsOpen && (
               <ul className="mt-2 space-y-2">
@@ -128,7 +128,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
-                      <h3 className="text-sm font-semibold truncate">{item.title}</h3>
+                      <h3 className="text-sm text-white font-semibold truncate">{item.title}</h3>
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </div>
                   </li>
@@ -154,7 +154,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
-                      <h3 className="text-sm font-semibold truncate">{item.title}</h3>
+                      <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </div>
                   </li>
@@ -180,7 +180,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                   <li key={index} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
                     <span className="flex-shrink-0">{item.icon}</span>
                     <div className="flex-grow">
-                      <h3 className="text-sm font-semibold truncate">{item.title}</h3>
+                      <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </div>
                   </li>
@@ -203,9 +203,9 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             <button className="absolute top-2 right-2 text-gray-600" onClick={handleCloseModal}>
               <FaTimes />
             </button>
-            <h2 className="text-2xl font-bold mb-4">{selectedItem.title}</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">{selectedItem.title}</h2>
             <div className="max-h-80 overflow-y-auto">
-              <p className="text-gray-700">{selectedItem.details}</p>
+              <p className="text-gray-200">{selectedItem.details}</p>
             </div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
             <button className="absolute top-2 right-2 text-gray-600" onClick={handleCloseAboutUsModal}>
               <FaTimes />
             </button>
-            <h2 className="text-2xl font-bold mb-4">About the Development Team</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">About the Development Team</h2>
             <div className="max-h-80 overflow-y-auto">
               <p className="text-gray-400">Our team of skilled developers from the University of Texas at Dallas crafted the O.A.S.I.S platform to help space research and exploration. With a passion for technology and innovation, we strive to deliver the best solutions for space-based applications.</p>
               <ul className="mt-4 text-gray-400">

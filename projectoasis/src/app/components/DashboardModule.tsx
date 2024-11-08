@@ -114,6 +114,7 @@ const DashboardModule: React.FC = () => {
         setData(result.data);
 
         // Transform `yearComparison` data for the chart
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const transformedLineChartData = result.data.yearComparison.map((item: any) => ({
           name: item.month,
           thisYear: item.current_year_count,
