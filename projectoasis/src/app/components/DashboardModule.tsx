@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -46,6 +46,14 @@ interface DashboardData {
   }[];
 }
 
+
+
+const calculateSlightPercentageChange = (current: number, previous: number): number => {
+  if (previous === 0) return 0; // Avoid division by zero
+  return ((current - previous) / previous) * 100;
+};
+
+
 // Sample data for the charts (keep existing data for now)
 const lineChartData = [
   { name: 'Jan', thisYear: 10000, lastYear: 12000 },
@@ -85,59 +93,97 @@ const activeWeatherEventsData = [
 
 const DashboardModule: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
+  const previousDataRef = useRef<DashboardData | null>(null); // Store previous data
   const [lineChartData, setLineChartData] = useState<Array<{ name: string; thisYear: number; lastYear: number }>>([]);
   const [satellitesByOwnerData, setSatellitesByOwnerData] = useState<Array<{ country: string; active_payload_count: number }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  // Get current timestamp
-  const currentDate = new Date();
-  const lastUpdated = currentDate.toLocaleString('en-US', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    timeZoneName: 'short',
-  });
+  // Dynamically get the current and last year
+  const currentYear = new Date().getFullYear();
+  const lastYear = currentYear - 1;
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch('/api/dashboard');
-        if (!response.ok) throw new Error('Failed to fetch data');
-        
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message);
-        
-        setData(result.data);
+    const currentDate = new Date();
+    setLastUpdated(currentDate.toLocaleString('en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short',
+    }));
+  }, []);
 
-        // Transform `yearComparison` data for the chart
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transformedLineChartData = result.data.yearComparison.map((item: any) => ({
-          name: item.month,
-          thisYear: item.current_year_count,
-          lastYear: item.prior_year_count,
-        }));
-        setLineChartData(transformedLineChartData);
-
-        // Set `topCountries` data for the "Satellites by Owner" chart
-        setSatellitesByOwnerData(result.data.topCountries);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-    
-    // Set up polling for real-time updates
-    const interval = setInterval(fetchDashboardData, 300000); // every 5 minutes
-    
-    return () => clearInterval(interval);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const fetchDashboardData = async () => {
+        try {
+          const response = await fetch('/api/dashboard');
+          if (!response.ok) throw new Error('Failed to fetch data');
+      
+          const result = await response.json();
+          if (!result.success) throw new Error(result.message);
+      
+          // Store the fetched data
+          const currentData = result.data;
+      
+          // Calculate percentage changes for tracked stats
+          if (previousDataRef.current) {
+            currentData.trackedDebris.percentageChange = calculateSlightPercentageChange(
+              currentData.trackedDebris.count,
+              previousDataRef.current.trackedDebris.count
+            );
+            currentData.activeSatellites.percentageChange = calculateSlightPercentageChange(
+              currentData.activeSatellites.count,
+              previousDataRef.current.activeSatellites.count
+            );
+            currentData.rocketBodies.percentageChange = calculateSlightPercentageChange(
+              currentData.rocketBodies.count,
+              previousDataRef.current.rocketBodies.count
+            );
+            currentData.totalTracked.percentageChange = calculateSlightPercentageChange(
+              currentData.totalTracked.count,
+              previousDataRef.current.totalTracked.count
+            );
+          }
+      
+          // Update the `previousDataRef` with the current data
+          previousDataRef.current = currentData;
+      
+          // Update the state with the current data
+          setData(currentData);
+      
+          // Transform `yearComparison` data for the chart
+          const transformedLineChartData = result.data.yearComparison.map((item: any) => {
+            const date = new Date(`${item.month} 1, ${currentYear}`); // Convert month name to date
+            return {
+              name: date.toLocaleString('en-US', { month: 'short' }), // Use 'short' for abbreviations (Jan, Feb, etc.)
+              thisYear: item.current_year_count,
+              lastYear: item.prior_year_count,
+            };
+          });
+          setLineChartData(transformedLineChartData);
+      
+          // Set `topCountries` data for the "Satellites by Owner" chart
+          setSatellitesByOwnerData(result.data.topCountries);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+          console.error('Error fetching dashboard data:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchDashboardData();
+  
+      // Set up polling for real-time updates
+      const interval = setInterval(fetchDashboardData, 300000); // every 5 minutes
+  
+      return () => clearInterval(interval);
+    }
   }, []);
 
   return (
@@ -166,87 +212,131 @@ const DashboardModule: React.FC = () => {
           </div>
 
           <div className="text-base text-gray-300">
-            Last Updated: {lastUpdated}
-          </div>
+          {lastUpdated ? `Last Updated: ${lastUpdated}` : 'Loading...'}
+        </div>
         </div>
 
         {/* Top Stats */}
         <div className="grid grid-cols-4 gap-4">
-          <div className="bg-[#ccf6e9] text-black p-4 rounded shadow">
-            <h3 className="text-lg font-semibold">Tracked Debris</h3>
-            <p className="text-3xl font-bold">
-              {loading 
-                ? '...' 
-                : (data?.trackedDebris?.count ?? 0).toLocaleString()}
-            </p>
-            <p className={`text-sm ${
-              (data?.trackedDebris?.percentageChange ?? 0) >= 0 
-                ? 'text-green-600' 
+        <div
+          className="p-4 rounded shadow"
+          style={{
+            backgroundColor:
+              data?.trackedDebris?.percentageChange === 0
+                ? '#ccf6e9' // Green for 0.00%
+                : (data?.trackedDebris?.percentageChange ?? 0) > 0
+                ? '#ccf6e9' // Green for positive change
+                : '#f9b3b1', // Red for negative change
+          }}
+        >
+           <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Tracked Debris</h3>
+           <p className="text-3xl font-bold" style={{ color: 'black' }}>
+            {loading ? '...' : (data?.trackedDebris?.count ?? 0).toLocaleString()}
+          </p>
+          <p
+            className={`text-sm ${
+              data?.trackedDebris?.percentageChange === 0
+                ? 'text-green-600'
+                : (data?.trackedDebris?.percentageChange ?? 0) > 0
+                ? 'text-green-600'
                 : 'text-red-600'
+            }`}
+          >
+            {loading
+              ? '...'
+              : `${data?.trackedDebris?.percentageChange?.toFixed(2) ?? '0.00'}% ${
+                  (data?.trackedDebris?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
+                }`}
+          </p>
+        </div>
+          <div
+            className="p-4 rounded shadow"
+            style={{
+              backgroundColor:
+                data?.activeSatellites?.percentageChange === 0
+                  ? '#ccf6e9'
+                  : (data?.activeSatellites?.percentageChange ?? 0) > 0
+                  ? '#ccf6e9'
+                  : '#f9b3b1',
+            }}
+          >
+             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Active Satellites</h3>
+             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+              {loading ? '...' : (data?.activeSatellites?.count ?? 0).toLocaleString()}
+            </p>
+            <p
+              className={`text-sm ${
+                data?.activeSatellites?.percentageChange === 0
+                  ? 'text-green-600'
+                  : (data?.activeSatellites?.percentageChange ?? 0) > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
               }`}
             >
-              {loading 
-                ? '...' 
-                : `${data?.trackedDebris?.percentageChange?.toFixed(2) ?? '0.00'}% ${
-                    (data?.trackedDebris?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
-                  }`}
-            </p>
-          </div>
-          <div className="bg-[#f9b3b1] text-black p-4 rounded shadow">
-            <h3 className="text-lg font-semibold">Active Satellites</h3>
-            <p className="text-3xl font-bold">
-              {loading 
-                ? '...' 
-                : (data?.activeSatellites?.count ?? 0).toLocaleString()}
-            </p>
-            <p className={`text-sm ${
-              (data?.activeSatellites?.percentageChange ?? 0) >= 0 
-                ? 'text-green-600' 
-                : 'text-red-600'
-              }`}
-            >
-              {loading 
-                ? '...' 
+              {loading
+                ? '...'
                 : `${data?.activeSatellites?.percentageChange?.toFixed(2) ?? '0.00'}% ${
                     (data?.activeSatellites?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
                   }`}
             </p>
           </div>
-          <div className="bg-[#ccf6e9] text-black p-4 rounded shadow">
-            <h3 className="text-lg font-semibold">Rocket Bodies</h3>
-            <p className="text-3xl font-bold">
-              {loading 
-                ? '...' 
-                : (data?.rocketBodies?.count ?? 0).toLocaleString()}
+          <div
+            className="p-4 rounded shadow"
+            style={{
+              backgroundColor:
+                data?.rocketBodies?.percentageChange === 0
+                  ? '#ccf6e9'
+                  : (data?.rocketBodies?.percentageChange ?? 0) > 0
+                  ? '#ccf6e9'
+                  : '#f9b3b1',
+            }}
+          >
+             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Rocket Bodies</h3>
+             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+              {loading ? '...' : (data?.rocketBodies?.count ?? 0).toLocaleString()}
             </p>
-            <p className={`text-sm ${
-              (data?.rocketBodies?.percentageChange ?? 0) >= 0 
-                ? 'text-green-600' 
-                : 'text-red-600'
+            <p
+              className={`text-sm ${
+                data?.rocketBodies?.percentageChange === 0
+                  ? 'text-green-600'
+                  : (data?.rocketBodies?.percentageChange ?? 0) > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
               }`}
             >
-              {loading 
-                ? '...' 
+              {loading
+                ? '...'
                 : `${data?.rocketBodies?.percentageChange?.toFixed(2) ?? '0.00'}% ${
                     (data?.rocketBodies?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
                   }`}
             </p>
           </div>
-          <div className="bg-[#ccf6e9] text-black p-4 rounded shadow">
-            <h3 className="text-lg font-semibold">Total Tracked Objects</h3>
-            <p className="text-3xl font-bold">
-              {loading 
-                ? '...' 
-                : (data?.totalTracked?.count ?? 0).toLocaleString()}
+          <div
+            className="p-4 rounded shadow"
+            style={{
+              backgroundColor:
+                data?.totalTracked?.percentageChange === 0
+                  ? '#ccf6e9'
+                  : (data?.totalTracked?.percentageChange ?? 0) > 0
+                  ? '#ccf6e9'
+                  : '#f9b3b1',
+            }}
+          >
+             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Total Tracked Objects</h3>
+             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+              {loading ? '...' : (data?.totalTracked?.count ?? 0).toLocaleString()}
             </p>
-            <p className={`text-sm ${
-              (data?.totalTracked?.percentageChange ?? 0) >= 0 
-                ? 'text-green-600' 
-                : 'text-red-600'
+            <p
+              className={`text-sm ${
+                data?.totalTracked?.percentageChange === 0
+                  ? 'text-green-600'
+                  : (data?.totalTracked?.percentageChange ?? 0) > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
               }`}
             >
-              {loading 
-                ? '...' 
+              {loading
+                ? '...'
                 : `${data?.totalTracked?.percentageChange?.toFixed(2) ?? '0.00'}% ${
                     (data?.totalTracked?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
                   }`}
@@ -258,32 +348,52 @@ const DashboardModule: React.FC = () => {
         <div className="grid grid-cols-3 gap-6">
           {/* Total Objects Chart */}
           <div className="col-span-2 bg-[#1f1f24] p-6 rounded shadow">
-            <h3 className="text-xl font-bold text-white">Total Objects</h3>
-            <p className="text-sm text-gray-400">This year vs. Last year</p>
-            <div className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center" style={{ height: '300px' }}>
-              <ResponsiveContainer width="95%" height={250}>
-                <LineChart data={lineChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="name" stroke="#c0c0df" />
-                  <YAxis stroke="#c0c0df" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1f1f24',
-                      borderColor: '#36a2eb',
-                      borderRadius: '8px',
-                      color: '#ffffff',
-                    }}
-                    itemStyle={{
-                      color: '#ffffff',
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="thisYear" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  <Line type="monotone" dataKey="lastYear" stroke="#82ca9d" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <h3 className="text-xl font-bold text-white">Total Launches</h3>
+          <p className="text-sm text-gray-400">
+            {`${currentYear} vs. ${lastYear}`}
+          </p>
+          <div
+            className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
+            style={{ height: '300px' }}
+          >
+            <ResponsiveContainer width="95%" height={250}>
+              <LineChart data={lineChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#c0c0df" 
+                  tickFormatter={(month) => month} 
+                />
+                <YAxis stroke="#c0c0df" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1f1f24',
+                    borderColor: '#36a2eb',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                  itemStyle={{
+                    color: '#ffffff',
+                  }}
+                />
+                <Legend
+                  formatter={(value) =>
+                    value === 'thisYear'
+                      ? `${currentYear}`
+                      : `${lastYear}`
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="thisYear"
+                  stroke="#8884d8"
+                  activeDot={{ r: 8 }}
+                />
+                <Line type="monotone" dataKey="lastYear" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
+        </div>
 
           {/* Active Weather Events */}
           <div className="bg-[#1f1f24] p-6 rounded shadow">
@@ -391,7 +501,10 @@ const DashboardModule: React.FC = () => {
         {/* Satellites by Country Chart */}
         <div className="bg-[#1f1f24] p-6 rounded shadow mt-6">
           <h3 className="text-xl font-bold text-white">Satellites by Country</h3>
-          <div className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center" style={{ height: '300px' }}>
+          <div
+            className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
+            style={{ height: '300px' }}
+          >
             {loading ? (
               <p className="text-white">Loading...</p>
             ) : error ? (
@@ -401,19 +514,31 @@ const DashboardModule: React.FC = () => {
                 <BarChart data={satellitesByOwnerData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                   <XAxis dataKey="country" stroke="#c0c0df" />
-                  <YAxis stroke="#c0c0df" />
+                  {/* Apply a logarithmic scale for the Y-axis */}
+                  <YAxis
+                    stroke="#c0c0df"
+                    scale="log" // Use logarithmic scale
+                    domain={[1, 'auto']} // Start at 1 to avoid log(0)
+                    allowDataOverflow={true} // Ensure all bars fit within the chart
+                    tickFormatter={(value) => value.toLocaleString()} // Format ticks for better readability
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#1f1f24',
                       borderColor: '#36a2eb',
                       borderRadius: '8px',
-                      color: '#ffffff'
+                      color: '#ffffff',
                     }}
                     itemStyle={{
-                      color: '#ffffff'
+                      color: '#ffffff',
                     }}
+                    formatter={(value: number) => value.toLocaleString()} // Format values
                   />
-                  <Bar dataKey="active_payload_count" fill="#36a2eb" radius={[10, 10, 0, 0]} />
+                  <Bar
+                    dataKey="active_payload_count"
+                    fill="#36a2eb"
+                    radius={[10, 10, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}

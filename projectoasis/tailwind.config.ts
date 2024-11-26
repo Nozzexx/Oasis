@@ -1,37 +1,53 @@
 /** @type {import('tailwindcss').Config} */
 const config = {
-  darkMode: 'class', // Enable dark mode support
+  darkMode: 'class',
   content: [
-    './src/app/**/*.{js,ts,jsx,tsx}',    // Check if this is where your main app files are
-    './src/components/**/*.{js,ts,jsx,tsx}',  // If components are outside `app` folder
-    './src/pages/**/*.{js,ts,jsx,tsx}',   // For Next.js pages
+    './src/app/**/*.{js,ts,jsx,tsx}',
+    './src/components/**/*.{js,ts,jsx,tsx}',
+    './src/pages/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
     extend: {
       colors: {
-        primary: '#0D1117', // Main background color
-        secondary: '#161B22', // Sidebar background color
-        accent: '#58A6FF', // Accent color for highlights
-        sidebar: '#1c1c1c', // Custom sidebar color
-        'card-bg': '#1C1F26', // Background for cards/central elements
+        primary: '#0D1117',
+        secondary: '#161B22',
+        accent: '#58A6FF',
+        sidebar: '#1c1c1c',
+        'card-bg': '#1C1F26',
+        destructive: '#ff0000', // Add this for the Alert component
       },
       spacing: {
-        '16': '4rem', // For collapsed sidebar width
-        '64': '16rem', // For expanded sidebar width
+        '16': '4rem',
+        '64': '16rem',
       },
       transitionProperty: {
-        width: 'width', // Smooth transitions for collapsible sidebars
+        width: 'width',
       },
       zIndex: {
-        '10': 10, // For fixed elements like topbar
+        '10': 10,
       },
       flex: {
-        '1': '1 1 0%', // Make central view area flexible and responsive
+        '1': '1 1 0%',
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: 0 },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: 0 },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },
   plugins: [
-    require('@tailwindcss/forms'), // Ensure you have this installed
+    require('@tailwindcss/forms'),
+    require("tailwindcss-animate"), // Add this plugin
   ],
 };
 

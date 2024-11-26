@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { FaBook, FaSun, FaSatellite, FaTrash, FaChartLine, FaGlobe, FaArrowRight, FaArrowLeft, FaRocket, FaMeteor } from 'react-icons/fa';
+import { IoMdPlanet } from "react-icons/io";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -27,6 +28,7 @@ export default function LeftSidebar({ collapsed, toggleCollapse, setActiveModule
     { name: 'Risk Assessment', icon: <FaChartLine />, module: 'RiskAssessmentModule' },
     { name: 'Satellite Status', icon: <FaSatellite />, module: 'SatelliteStatusModule' },
     { name: 'Near Earth Objs', icon: <FaMeteor />, module: 'NearEarthObjectsModule' },
+    { name: 'Exoplanets', icon: <IoMdPlanet/>, module: 'ExoplanetModule'}
   ];
 
   return (

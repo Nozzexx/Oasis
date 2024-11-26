@@ -12,6 +12,7 @@ import SpaceWeatherModule from './SpaceWeatherModule';
 import RiskAssessmentModule from './RiskAssessmentModule';
 import SatelliteStatusModule from './SatelliteStatusModule';
 import DebrisTrackingModule from './DebrisTrackingModule';
+import ExoplanetModule from './ExoplanetModule';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -56,6 +57,8 @@ export default function Layout({ children }: LayoutProps) {
         return <RiskAssessmentModule />;
       case 'SatelliteStatusModule':
         return <SatelliteStatusModule />;
+      case 'ExoplanetModule':
+        return <ExoplanetModule />;
       default:
         return <DashboardModule />;
     }

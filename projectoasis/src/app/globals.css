@@ -29,3 +29,71 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Add these to your globals.css */
+.cesium-viewer {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.cesium-viewer-cesiumWidgetContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.cesium-widget {
+  width: 100%;
+  height: 100%;
+}
+
+.cesium-widget canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Main content area styles */
+.fixed-content-area {
+  position: absolute;
+  top: 12px;
+  left: 0px; /* Width of collapsed sidebar */
+  right: 0px; /* Width of collapsed sidebar */
+  bottom: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* When sidebar is expanded */
+.sidebar-expanded .fixed-content-area {
+  left: 288px; /* Width of expanded sidebar */
+  right: 288px; /* Width of expanded sidebar */
+}
+
+/* Scrollbar styles */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #36a2eb #1c1c1c;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 8px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: #1c1c1c;
+  border-radius: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: #36a2eb;
+  border-radius: 4px;
+  border: 2px solid #1c1c1c;
+}
+
+.overflow-x-auto::-webkit-scrollbar-corner {
+  background: #1c1c1c;
+}
