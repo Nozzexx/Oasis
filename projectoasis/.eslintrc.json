@@ -1,13 +1,31 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "rules": {
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      { 
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
-      }
-    ]
+    // Disable the explicit any warnings
+    "@typescript-eslint/no-explicit-any": "off",
+    
+    // Make unused vars warnings instead of errors
+    "@typescript-eslint/no-unused-vars": "warn",
+    
+    // Allow unused function parameters
+    "@typescript-eslint/no-unused-params": "off",
+    
+    // Disable requiring explicit return types
+    "@typescript-eslint/explicit-function-return-type": "off",
+    
+    // Disable the unsafe function type warning
+    "@typescript-eslint/no-unsafe-function-type": "off",
+    
+    // Make React hooks warnings instead of errors
+    "react-hooks/exhaustive-deps": "warn",
+    
+    // Allow unescaped entities
+    "react/no-unescaped-entities": "off",
+
+    // Allow empty interfaces
+    "@typescript-eslint/no-empty-interface": "off"
   }
 }

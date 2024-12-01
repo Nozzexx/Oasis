@@ -37,6 +37,49 @@ interface EducationItem {
   icon: string;
 }
 
+// src/types/sidebar.ts
+export interface NotificationItem {
+  id: number;
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+  notification_type: string;
+}
+
+export interface NewsItem {
+  icon: JSX.Element;
+  title: string;
+  time: string;
+  details: string;
+  fullDetails: string;
+}
+
+export interface SidebarItemProps {
+  icon: JSX.Element;
+  title: string;
+  time: string;
+  details: string;
+  fullDetails: string;
+  read?: boolean;
+}
+
+export interface SidebarProps {
+  collapsed: boolean;
+  toggleCollapse: () => void;
+  handleNotificationClick: () => void;
+}
+
+export interface SidebarState {
+  notifications: NotificationItem[];
+  newsUpdates: NewsItem[];
+  education: EducationItem[];
+  selectedItem: NotificationItem | NewsItem | EducationItem | null;
+  viewAllNotifications: boolean;
+  viewAllNews: boolean;
+  viewAllEducation: boolean;
+}
+
 export default function RightSidebar({ collapsed, toggleCollapse, handleNotificationClick }: RightSidebarProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(true);
   const [isNewsUpdatesOpen, setIsNewsUpdatesOpen] = useState(true);

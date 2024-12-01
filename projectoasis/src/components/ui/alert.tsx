@@ -1,4 +1,3 @@
-// src/components/ui/alert.tsx
 import * as React from "react";
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -24,8 +23,8 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 
 Alert.displayName = "Alert";
 
-export interface AlertDescriptionProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+// Remove the empty interface and use HTMLDivElement props directly
+export type AlertDescriptionProps = React.HTMLAttributes<HTMLDivElement>;
 
 export const AlertDescription = React.forwardRef<
   HTMLDivElement,

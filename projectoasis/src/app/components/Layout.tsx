@@ -1,18 +1,9 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
-import LeftSidebar from './LeftSidebar';
-import RightSidebar from './RightSidebar';
-import Topbar from './Topbar';
-import DashboardModule from './DashboardModule';
-import DataDisplayModule from './DataDisplayModule';
-import NearEarthObjectsModule from './NearEarthObjectsModule';
-import OrbitalRegionsModule from './OrbitalRegionsModule';
-import SpaceWeatherModule from './SpaceWeatherModule';
-import RiskAssessmentModule from './RiskAssessmentModule';
-import SatelliteStatusModule from './SatelliteStatusModule';
-import DebrisTrackingModule from './DebrisTrackingModule';
-import ExoplanetModule from './ExoplanetModule';
+import { ReactNode, useState } from 'react';
+import LeftSidebar from '@/app/components/LeftSidebar';
+import RightSidebar from '@/app/components/RightSidebar';
+import Topbar from '@/app/components/Topbar';
 
 interface LayoutProps {
   children?: ReactNode;
@@ -25,47 +16,8 @@ export default function Layout({ children }: LayoutProps) {
   const [activeModule, setActiveModule] = useState('DashboardModule');
   const [activeCategory, setActiveCategory] = useState('Dashboard');
 
-  const [darkMode, setDarkMode] = useState(true);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const handleNotificationClick = () => {
-    _setNotificationsCount((prevCount) => Math.max(prevCount - 1, 0));
-  };
-
-  const renderActiveModule = () => {
-    switch (activeModule) {
-      case 'DashboardModule':
-        return <DashboardModule />;
-      case 'DataDisplayModule':
-        return <DataDisplayModule />;
-      case 'NearEarthObjectsModule':
-        return <NearEarthObjectsModule />;
-      case 'OrbitalRegionsModule':
-        return <OrbitalRegionsModule />;
-      case 'SpaceWeatherModule':
-        return <SpaceWeatherModule />;
-      case 'DebrisTrackingModule':
-        return <DebrisTrackingModule />;
-      case 'RiskAssessmentModule':
-        return <RiskAssessmentModule />;
-      case 'SatelliteStatusModule':
-        return <SatelliteStatusModule />;
-      case 'ExoplanetModule':
-        return <ExoplanetModule />;
-      default:
-        return <DashboardModule />;
-    }
-  };
-
   return (
-    <div className={`h-screen flex ${darkMode ? 'dark' : ''}`}>
+    <div className="h-screen flex">
       <LeftSidebar
         collapsed={isLeftSidebarCollapsed}
         toggleCollapse={() => setLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
@@ -74,8 +26,6 @@ export default function Layout({ children }: LayoutProps) {
       />
       <div className="flex flex-col flex-1">
         <Topbar
-          darkMode={darkMode}
-          toggleDarkMode={() => setDarkMode(!darkMode)}
           isRightSidebarCollapsed={isRightSidebarCollapsed}
           toggleRightSidebar={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
           activeModule={activeCategory}
@@ -94,14 +44,13 @@ export default function Layout({ children }: LayoutProps) {
             backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
           }}
         >
-          {renderActiveModule()}
           {children}
         </main>
       </div>
       <RightSidebar
         collapsed={isRightSidebarCollapsed}
         toggleCollapse={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
-        handleNotificationClick={handleNotificationClick}
+        handleNotificationClick={() => _setNotificationsCount(prev => Math.max(prev - 1, 0))}
       />
     </div>
   );

@@ -12,7 +12,7 @@ interface Notification {
   notification_type: string;
 }
 
-interface TopbarProps {
+export interface TopbarProps {
   isRightSidebarCollapsed: boolean;
   toggleRightSidebar: () => void;
   activeModule: string;
@@ -21,12 +21,11 @@ interface TopbarProps {
 export default function Topbar({
   isRightSidebarCollapsed,
   toggleRightSidebar,
-  activeModule,
+  activeModule
 }: TopbarProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsCount, setNotificationsCount] = useState(0);
 
-  // Fetch notifications
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -41,19 +40,15 @@ export default function Topbar({
     };
 
     fetchNotifications();
-    // Set up polling every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Handle click on the notification bell
   const handleBellClick = () => {
     if (isRightSidebarCollapsed) {
       toggleRightSidebar();
     }
     
-    // Mark all notifications as read
     if (notificationsCount > 0) {
       notifications.forEach(async (notification) => {
         if (!notification.read) {
@@ -76,7 +71,6 @@ export default function Topbar({
 
   return (
     <header className="bg-[#1c1c1c] text-white p-4 w-full flex items-center justify-between shadow-md border-b border-gray-600">
-      {/* Left section */}
       <div className="flex items-center space-x-4">
         <FaTh className="text-xl" />
         <FaStar className="text-xl" />
@@ -85,12 +79,9 @@ export default function Topbar({
         <span className="text-sm font-bold">{activeModule}</span>
       </div>
 
-      {/* Center section */}
       <div className="flex-grow"></div>
 
-      {/* Right section */}
       <div className="relative flex items-center space-x-4">
-        {/* Notification Bell with Counter */}
         <div className="relative" onClick={handleBellClick}>
           {notificationsCount > 0 ? (
             <FaBell className="text-xl cursor-pointer" />

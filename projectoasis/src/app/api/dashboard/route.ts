@@ -10,19 +10,62 @@ interface MonthData {
   prior_year_count: number;
 }
 
-interface CountryData {
+// Dashboard Data Types
+export interface DashboardMetrics {
+  value: number;
+  change: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface ChartDataPoint {
+  name: string;
+  thisYear: number;
+  lastYear: number;
+}
+
+export interface CountryData {
   country: string;
   active_payload_count: number;
 }
 
-interface SatelliteStatusData {
-  satname: string;
-  country: string;
-  launch_date: string;
-  period: number;
-  inclination: number;
-  current: boolean;
-  rcs_value: string;
+export interface DashboardStats {
+  trackedDebris: DashboardMetrics;
+  activeSatellites: DashboardMetrics;
+  rocketBodies: DashboardMetrics;
+  totalTracked: DashboardMetrics;
+  yearComparison: ChartDataPoint[];
+  topCountries: CountryData[];
+}
+
+// Space Weather Types
+export interface SpaceWeatherEvent {
+  timestamp: string;
+  type: 'flare' | 'cme' | 'storm';
+  intensity: number;
+  details: string;
+}
+
+// Environmental Score Types
+export interface EnvironmentalScore {
+  region: string;
+  risk_score: number;
+  flare_risk: number;
+  cme_risk: number;
+  storm_risk: number;
+  debris_risk: number;
+  confidence_score: number;
+}
+
+// Risk Assessment Types
+export interface RiskAssessment {
+  score: number;
+  confidence: number;
+  components: {
+    solar: number;
+    debris: number;
+    magnetic: number;
+  };
+  recommendations: string[];
 }
 
 export async function GET(request: NextRequest) {
