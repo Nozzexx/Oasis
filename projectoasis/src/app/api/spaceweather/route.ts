@@ -6,6 +6,7 @@ import { NextRequest } from 'next/server';
 import pool from '@/utils/db';
 
 export async function GET(request: NextRequest) {
+  let client;
   try {
     const searchParams = request.nextUrl.searchParams;
     const eventType = searchParams.get('type') ?? ''; // Default to an empty string if null
@@ -73,13 +74,22 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const result = await pool.query(query, queryParams);
+    // Acquire a client from the pool
+    client = await pool.connect();
+    const result = await client.query(query, queryParams);
+
     return NextResponse.json(result.rows);
+
   } catch (error) {
     console.error('Error fetching space weather data:', error);
     return NextResponse.json(
       { error: 'Failed to fetch space weather data' },
       { status: 500 }
     );
+  } finally {
+    // Release the client back to the pool
+    if (client) {
+      client.release();
+    }
   }
 }
