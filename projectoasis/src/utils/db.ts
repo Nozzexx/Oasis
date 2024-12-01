@@ -14,7 +14,7 @@ const pool: Pool = global._pool || new Pool({
   ssl: {
     rejectUnauthorized: false, // Required for some cloud databases like Heroku or AWS RDS
   },
-  max: 10, // Limit the number of connections
+  max: 20, // Limit the number of connections
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
   connectionTimeoutMillis: 2000, // Wait 2 seconds before timing out
 });
