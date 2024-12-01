@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // src/app/api/neo/route.ts
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';

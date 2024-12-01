@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 // src/app/api/export-pdf/route.ts
 import { NextResponse } from 'next/server';
 import jsPDF from 'jspdf';
