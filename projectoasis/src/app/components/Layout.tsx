@@ -5,6 +5,16 @@ import LeftSidebar from '@/app/components/LeftSidebar';
 import RightSidebar from '@/app/components/RightSidebar';
 import Topbar from '@/app/components/Topbar';
 
+import DashboardModule from '@/app/components/DashboardModule';
+import DataDisplayModule from '@/app/components/DataDisplayModule';
+import NearEarthObjectsModule from '@/app/components/NearEarthObjectsModule';
+import OrbitalRegionsModule from '@/app/components/OrbitalRegionsModule';
+import SpaceWeatherModule from '@/app/components/SpaceWeatherModule';
+import RiskAssessmentModule from '@/app/components/RiskAssessmentModule';
+import SatelliteStatusModule from '@/app/components/SatelliteStatusModule';
+import DebrisTrackingModule from '@/app/components/DebrisTrackingModule';
+import ExoplanetModule from '@/app/components/ExoplanetModule';
+
 interface LayoutProps {
   children?: ReactNode;
 }
@@ -12,9 +22,34 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isLeftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [isRightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [notificationsCount, _setNotificationsCount] = useState(0);
-  const [activeModule, setActiveModule] = useState('DashboardModule');
+  const [activeModule, setActiveModule] = useState('DashboardModule'); // Default to DashboardModule
   const [activeCategory, setActiveCategory] = useState('Dashboard');
+
+  // Dynamically render the active module
+  const renderActiveModule = () => {
+    switch (activeModule) {
+      case 'DashboardModule':
+        return <DashboardModule />;
+      case 'DataDisplayModule':
+        return <DataDisplayModule />;
+      case 'NearEarthObjectsModule':
+        return <NearEarthObjectsModule />;
+      case 'OrbitalRegionsModule':
+        return <OrbitalRegionsModule />;
+      case 'SpaceWeatherModule':
+        return <SpaceWeatherModule />;
+      case 'RiskAssessmentModule':
+        return <RiskAssessmentModule />;
+      case 'SatelliteStatusModule':
+        return <SatelliteStatusModule />;
+      case 'DebrisTrackingModule':
+        return <DebrisTrackingModule />;
+      case 'ExoplanetModule':
+        return <ExoplanetModule />;
+      default:
+        return <DashboardModule />;
+    }
+  };
 
   return (
     <div className="h-screen flex">
@@ -44,13 +79,13 @@ export default function Layout({ children }: LayoutProps) {
             backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
           }}
         >
-          {children}
+          {renderActiveModule()}
         </main>
       </div>
       <RightSidebar
         collapsed={isRightSidebarCollapsed}
         toggleCollapse={() => setRightSidebarCollapsed(!isRightSidebarCollapsed)}
-        handleNotificationClick={() => _setNotificationsCount(prev => Math.max(prev - 1, 0))}
+        handleNotificationClick={() => {}}
       />
     </div>
   );
