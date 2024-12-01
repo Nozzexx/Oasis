@@ -7,7 +7,6 @@ import { FiSunrise } from "react-icons/fi";
 import { TbSunElectricity } from "react-icons/tb";
 
 
-
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
