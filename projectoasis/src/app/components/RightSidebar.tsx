@@ -198,14 +198,23 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
       try {
         const response = await fetch('/api/education');
         if (!response.ok) throw new Error('Failed to fetch education data');
-        const data: EducationItem[] = await response.json();
-        setEducation(data);
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          setEducation(result.data);
+        } else {
+          console.error('Invalid education data format:', result);
+          setEducation([]);
+        }
       } catch (error) {
         console.error('Error fetching education data:', error);
+        setEducation([]);
       }
     };
-
+  
     fetchEducation();
+    // Optionally add refresh interval
+    const interval = setInterval(fetchEducation, 300000); // 5 minutes
+    return () => clearInterval(interval);
   }, []);
 
     const getIconComponent = (iconName: string): JSX.Element => {
@@ -306,8 +315,7 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
               </div>
               {isEducationOpen && (
                 <ul className="mt-2 space-y-2">
-                  {/* Check if education is an array and map over it */}
-                  {Array.isArray(education) && education.length > 0 ? (
+                  {education && education.length > 0 ? (
                     (viewAllEducation ? education : education.slice(0, 4)).map((item) => (
                       <li
                         key={item.id}
@@ -318,15 +326,14 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
                         <div className="flex-grow">
                           <h3 className="text-sm text-white font-semibold truncate">{item.title}</h3>
                           <p className="text-xs text-gray-400">{item.time}</p>
+                          <p className="text-xs text-gray-400 truncate">{item.details}</p>
                         </div>
                       </li>
                     ))
                   ) : (
-                    // Fallback message for empty or invalid data
-                    <p className="text-gray-400">No education items available.</p>
+                    <li className="text-gray-400 text-sm p-2">Loading education content...</li>
                   )}
-                  {/* Toggle "View All" or "View Less" if more than 4 items exist */}
-                  {Array.isArray(education) && education.length > 4 && (
+                  {education && education.length > 4 && (
                     <div
                       className="text-xs text-blue-400 cursor-pointer hover:underline"
                       onClick={() => setViewAllEducation(!viewAllEducation)}

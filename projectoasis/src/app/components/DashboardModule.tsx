@@ -173,75 +173,79 @@ const DashboardModule: React.FC = () => {
   }, []);
 
   // Fetch space weather data
-  useEffect(() => {
-    async function fetchSpaceWeatherData() {
-      try {
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
+  // First, update the useEffect for fetching space weather data
+useEffect(() => {
+  async function fetchSpaceWeatherData() {
+    try {
+      // Get the last month's date range
+      const now = new Date();
+      const endDate = now.toISOString().split('T')[0];
+      const startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString().split('T')[0];
 
-        const [solarFlareResponse, cmeResponse, geostormResponse] = await Promise.all([
-          fetch(`/api/spaceweather?type=solar_flare&start=2024-11-01&end=2024-11-21`),
-          fetch(`/api/spaceweather?type=cme&start=2024-11-01&end=2024-11-21`),
-          fetch(`/api/spaceweather?type=geostorm&start=2010-01-01&end=2024-11-21`)
-        ]);
+      const [solarFlareResponse, cmeResponse, geostormResponse] = await Promise.all([
+        fetch(`/api/spaceweather?type=solar_flare&start=${startDate}&end=${endDate}`),
+        fetch(`/api/spaceweather?type=cme&start=${startDate}&end=${endDate}`),
+        fetch(`/api/spaceweather?type=geostorm&start=${startDate}&end=${endDate}`)
+      ]);
 
-        const solarFlareData = await solarFlareResponse.json();
-        const cmeData = await cmeResponse.json();
-        const geostormData = await geostormResponse.json();
-
-        const solarFlares: string[] = [];
-        const cmes: string[] = [];
-        const geostorms: string[] = [];
-
-        solarFlareData.forEach((flare: any) => {
-          const flareDate = new Date(flare.peak_time);
-          if (flareDate.getFullYear() === currentYear && flareDate.getMonth() === currentMonth) {
-            if (flare.class_type.startsWith('X')) {
-              solarFlares.push(
-                `⚡ High-intensity solar flare detected (Class: ${flare.class_type}) on ${flare.peak_time}. Possible radio blackouts and satellite communication disruptions.`
-              );
-            } else if (flare.class_type.startsWith('M')) {
-              solarFlares.push(
-                `📡 Moderate solar flare detected (Class: ${flare.class_type}) on ${flare.peak_time}. Minor impacts on HF communication.`
-              );
-            }
-          }
-        });
-
-        cmeData.forEach((cme: any) => {
-          const cmeDate = new Date(cme.start_time);
-          if (cmeDate.getFullYear() === currentYear && cmeDate.getMonth() === currentMonth) {
-            if (cme.speed > 750) {
-              cmes.push(
-                `💨 High-speed CME detected (Speed: ${cme.speed} km/s) on ${cme.start_time}. Potential for geomagnetic storms and power grid impacts.`
-              );
-            }
-          }
-        });
-
-        geostormData.forEach((storm: any) => {
-          const stormDate = new Date(storm.observed_time);
-          if (stormDate.getFullYear() === currentYear && stormDate.getMonth() === currentMonth) {
-            if (storm.kp_index >= 7) {
-              geostorms.push(
-                `🌌 Severe geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${storm.observed_time}. Possible power grid failures and widespread aurora visibility.`
-              );
-            } else if (storm.kp_index >= 5) {
-              geostorms.push(
-                `🌍 Moderate geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${storm.observed_time}. Some satellite orientation issues and aurora activity expected.`
-              );
-            }
-          }
-        });
-
-        setImpactsByType({ solarFlares, cmes, geostorms });
-      } catch (error) {
-        console.error('Error fetching space weather data:', error);
+      if (!solarFlareResponse.ok || !cmeResponse.ok || !geostormResponse.ok) {
+        throw new Error('Failed to fetch space weather data');
       }
+
+      const solarFlareData = await solarFlareResponse.json();
+      const cmeData = await cmeResponse.json();
+      const geostormData = await geostormResponse.json();
+
+      const solarFlares: string[] = [];
+      const cmes: string[] = [];
+      const geostorms: string[] = [];
+
+      // Process Solar Flare Data
+      solarFlareData.forEach((flare: any) => {
+        if (flare.class_type.startsWith('X')) {
+          solarFlares.push(
+            `⚡ High-intensity solar flare detected (Class: ${flare.class_type}) on ${new Date(flare.peak_time).toLocaleString()}`
+          );
+        } else if (flare.class_type.startsWith('M')) {
+          solarFlares.push(
+            `📡 Moderate solar flare detected (Class: ${flare.class_type}) on ${new Date(flare.peak_time).toLocaleString()}`
+          );
+        }
+      });
+
+      // Process CME Data
+      cmeData.forEach((cme: any) => {
+        if (cme.speed > 750) {
+          cmes.push(
+            `💨 High-speed CME detected (Speed: ${cme.speed} km/s) on ${new Date(cme.start_time).toLocaleString()}`
+          );
+        }
+      });
+
+      // Process Geostorm Data
+      geostormData.forEach((storm: any) => {
+        if (storm.kp_index >= 7) {
+          geostorms.push(
+            `🌌 Severe geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${new Date(storm.observed_time).toLocaleString()}`
+          );
+        } else if (storm.kp_index >= 5) {
+          geostorms.push(
+            `🌍 Moderate geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${new Date(storm.observed_time).toLocaleString()}`
+          );
+        }
+      });
+
+      setImpactsByType({ solarFlares, cmes, geostorms });
+    } catch (error) {
+      console.error('Error fetching space weather data:', error);
     }
-    fetchSpaceWeatherData();
-  }, []);
+  }
+
+  fetchSpaceWeatherData();
+  // Set up auto-refresh every 5 minutes
+  const interval = setInterval(fetchSpaceWeatherData, 300000);
+  return () => clearInterval(interval);
+}, []);
 
   
   useEffect(() => {
