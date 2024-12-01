@@ -1,20 +1,13 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { FiSunrise } from 'react-icons/fi';
+import { GiSunRadiations } from 'react-icons/gi';
+import { TbSunElectricity } from 'react-icons/tb';
+import { AlertTriangle } from 'lucide-react';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
 } from 'recharts';
 
 // Types for database response
@@ -46,12 +39,27 @@ interface DashboardData {
   }[];
 }
 
+interface NEOData {
+  id: string;
+  name: string;
+  observation_date: string;
+  estimated_diameter_km: number;
+  is_potentially_hazardous: boolean;
+}
+
+
+interface ApproachData {
+  close_approach_date: string;
+  relative_velocity_kph: number;
+  miss_distance_km: number;
+}
 
 
 const calculateSlightPercentageChange = (current: number, previous: number): number => {
   if (previous === 0) return 0; // Avoid division by zero
   return ((current - previous) / previous) * 100;
 };
+
 
 
 // Sample data for the charts (keep existing data for now)
@@ -82,28 +90,37 @@ const pieChartData = [
   { name: 'Other', value: 8.1, color: '#ffc658' },
 ];
 
-const activeWeatherEventsData = [
-  { type: 'Solar Storms', status: 'Active', color: '#36a2eb' },
-  { type: 'Geomagnetic Activity', status: 'High', color: '#ffc658' },
-  { type: 'Radiation Bursts', status: 'Moderate', color: '#82ca9d' },
-  { type: 'Solar Wind Speed', status: 'Increased', color: '#8884d8' },
-  { type: 'Cosmic Ray Levels', status: 'Low', color: '#c0c0df' },
-  { type: 'Particle Storms', status: 'Severe', color: '#f94a4a' },
-];
 
 const DashboardModule: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
-  const previousDataRef = useRef<DashboardData | null>(null); // Store previous data
+  const [neoData, setNeoData] = useState<NEOData[]>([]);
+  const [approachData, setApproachData] = useState<ApproachData[]>([]);
+  const [neoLoading, setNeoLoading] = useState(true);
+  const previousDataRef = useRef<DashboardData | null>(null);
   const [lineChartData, setLineChartData] = useState<Array<{ name: string; thisYear: number; lastYear: number }>>([]);
   const [satellitesByOwnerData, setSatellitesByOwnerData] = useState<Array<{ country: string; active_payload_count: number }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [impactsByType, setImpactsByType] = useState({
+    solarFlares: [] as string[],
+    cmes: [] as string[],
+    geostorms: [] as string[],
+  });
+  const [collapse, setCollapse] = useState({
+    solarFlares: false,
+    cmes: false,
+    geostorms: false,
+  });
+
+  const [environmentalRiskData, setEnvironmentalRiskData] = useState<Array<{
+    region: string;
+    risk_score: number;
+  }>>([]);
 
   // Dynamically get the current and last year
   const currentYear = new Date().getFullYear();
   const lastYear = currentYear - 1;
-
   useEffect(() => {
     const currentDate = new Date();
     setLastUpdated(currentDate.toLocaleString('en-US', {
@@ -115,6 +132,149 @@ const DashboardModule: React.FC = () => {
       second: '2-digit',
       timeZoneName: 'short',
     }));
+  }, []);
+
+  useEffect(() => {
+    const fetchEnvironmentalRiskData = async () => {
+      try {
+        const response = await fetch('/api/environmental-scores');
+        if (!response.ok) throw new Error('Failed to fetch environmental risk data');
+        
+        const data = await response.json();
+        
+        // Process the data to get the most recent score for each region
+        const latestScoresByRegion = new Map<string, number>();
+        
+        data.forEach((score: any) => {
+          const region = score.region;
+          const currentTimestamp = new Date(score.timestamp).getTime();
+          const existingScore = latestScoresByRegion.get(region);
+          
+          if (!existingScore || currentTimestamp > new Date(existingScore).getTime()) {
+            latestScoresByRegion.set(region, score.risk_score);
+          }
+        });
+  
+        // Convert the Map to an array and sort by region
+        const processedData = Array.from(latestScoresByRegion.entries())
+          .map(([region, risk_score]) => ({ region, risk_score }))
+          .sort((a, b) => a.region.localeCompare(b.region));
+  
+        setEnvironmentalRiskData(processedData);
+      } catch (error) {
+        console.error('Error fetching environmental risk data:', error);
+      }
+    };
+  
+    fetchEnvironmentalRiskData();
+    const interval = setInterval(fetchEnvironmentalRiskData, 300000); // Update every 5 minutes
+  
+    return () => clearInterval(interval);
+  }, []);
+
+  // Fetch space weather data
+  useEffect(() => {
+    async function fetchSpaceWeatherData() {
+      try {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+
+        const [solarFlareResponse, cmeResponse, geostormResponse] = await Promise.all([
+          fetch(`/api/spaceweather?type=solar_flare&start=2024-11-01&end=2024-11-21`),
+          fetch(`/api/spaceweather?type=cme&start=2024-11-01&end=2024-11-21`),
+          fetch(`/api/spaceweather?type=geostorm&start=2010-01-01&end=2024-11-21`)
+        ]);
+
+        const solarFlareData = await solarFlareResponse.json();
+        const cmeData = await cmeResponse.json();
+        const geostormData = await geostormResponse.json();
+
+        const solarFlares: string[] = [];
+        const cmes: string[] = [];
+        const geostorms: string[] = [];
+
+        solarFlareData.forEach((flare: any) => {
+          const flareDate = new Date(flare.peak_time);
+          if (flareDate.getFullYear() === currentYear && flareDate.getMonth() === currentMonth) {
+            if (flare.class_type.startsWith('X')) {
+              solarFlares.push(
+                `⚡ High-intensity solar flare detected (Class: ${flare.class_type}) on ${flare.peak_time}. Possible radio blackouts and satellite communication disruptions.`
+              );
+            } else if (flare.class_type.startsWith('M')) {
+              solarFlares.push(
+                `📡 Moderate solar flare detected (Class: ${flare.class_type}) on ${flare.peak_time}. Minor impacts on HF communication.`
+              );
+            }
+          }
+        });
+
+        cmeData.forEach((cme: any) => {
+          const cmeDate = new Date(cme.start_time);
+          if (cmeDate.getFullYear() === currentYear && cmeDate.getMonth() === currentMonth) {
+            if (cme.speed > 750) {
+              cmes.push(
+                `💨 High-speed CME detected (Speed: ${cme.speed} km/s) on ${cme.start_time}. Potential for geomagnetic storms and power grid impacts.`
+              );
+            }
+          }
+        });
+
+        geostormData.forEach((storm: any) => {
+          const stormDate = new Date(storm.observed_time);
+          if (stormDate.getFullYear() === currentYear && stormDate.getMonth() === currentMonth) {
+            if (storm.kp_index >= 7) {
+              geostorms.push(
+                `🌌 Severe geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${storm.observed_time}. Possible power grid failures and widespread aurora visibility.`
+              );
+            } else if (storm.kp_index >= 5) {
+              geostorms.push(
+                `🌍 Moderate geomagnetic storm detected (KP Index: ${storm.kp_index}) on ${storm.observed_time}. Some satellite orientation issues and aurora activity expected.`
+              );
+            }
+          }
+        });
+
+        setImpactsByType({ solarFlares, cmes, geostorms });
+      } catch (error) {
+        console.error('Error fetching space weather data:', error);
+      }
+    }
+    fetchSpaceWeatherData();
+  }, []);
+
+  
+  useEffect(() => {
+    const fetchNEOData = async () => {
+      setNeoLoading(true);
+      try {
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const [neoResponse, approachResponse] = await Promise.all([
+          fetch(`/api/neo?start=${startDate}&end=${endDate}`),
+          fetch(`/api/neo/approaches?start=${startDate}&end=${endDate}`)
+        ]);
+
+        if (!neoResponse.ok || !approachResponse.ok) {
+          throw new Error('Failed to fetch NEO data');
+        }
+
+        const neoResult = await neoResponse.json();
+        const approachResult = await approachResponse.json();
+
+        setNeoData(neoResult);
+        setApproachData(approachResult);
+      } catch (error) {
+        console.error('Error fetching NEO data:', error);
+      } finally {
+        setNeoLoading(false);
+      }
+    };
+
+    fetchNEOData();
+    const interval = setInterval(fetchNEOData, 300000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -158,9 +318,9 @@ const DashboardModule: React.FC = () => {
       
           // Transform `yearComparison` data for the chart
           const transformedLineChartData = result.data.yearComparison.map((item: any) => {
-            const date = new Date(`${item.month} 1, ${currentYear}`); // Convert month name to date
+            const date = new Date(`${item.month} 1, ${currentYear}`);
             return {
-              name: date.toLocaleString('en-US', { month: 'short' }), // Use 'short' for abbreviations (Jan, Feb, etc.)
+              name: date.toLocaleString('en-US', { month: 'short' }),
               thisYear: item.current_year_count,
               lastYear: item.prior_year_count,
             };
@@ -185,6 +345,18 @@ const DashboardModule: React.FC = () => {
       return () => clearInterval(interval);
     }
   }, []);
+
+  // Calculate NEO stats
+  const totalNEOs = neoData.length;
+  const hazardousCount = neoData.filter(neo => neo.is_potentially_hazardous).length;
+  const averageDiameter = neoData.length > 0 
+    ? neoData.reduce((acc, neo) => acc + neo.estimated_diameter_km, 0) / neoData.length 
+    : 0;
+  const closestApproach = approachData.length > 0
+    ? Math.min(...approachData.map(a => a.miss_distance_km))
+    : 0;
+
+
 
   return (
     <>
@@ -212,43 +384,43 @@ const DashboardModule: React.FC = () => {
           </div>
 
           <div className="text-base text-gray-300">
-          {lastUpdated ? `Last Updated: ${lastUpdated}` : 'Loading...'}
+            {lastUpdated ? `Last Updated: ${lastUpdated}` : 'Loading...'}
+          </div>
         </div>
-        </div>
-
         {/* Top Stats */}
         <div className="grid grid-cols-4 gap-4">
-        <div
-          className="p-4 rounded shadow"
-          style={{
-            backgroundColor:
-              data?.trackedDebris?.percentageChange === 0
-                ? '#ccf6e9' // Green for 0.00%
-                : (data?.trackedDebris?.percentageChange ?? 0) > 0
-                ? '#ccf6e9' // Green for positive change
-                : '#f9b3b1', // Red for negative change
-          }}
-        >
-           <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Tracked Debris</h3>
-           <p className="text-3xl font-bold" style={{ color: 'black' }}>
-            {loading ? '...' : (data?.trackedDebris?.count ?? 0).toLocaleString()}
-          </p>
-          <p
-            className={`text-sm ${
-              data?.trackedDebris?.percentageChange === 0
-                ? 'text-green-600'
-                : (data?.trackedDebris?.percentageChange ?? 0) > 0
-                ? 'text-green-600'
-                : 'text-red-600'
-            }`}
+          <div
+            className="p-4 rounded shadow"
+            style={{
+              backgroundColor:
+                data?.trackedDebris?.percentageChange === 0
+                  ? '#ccf6e9'
+                  : (data?.trackedDebris?.percentageChange ?? 0) > 0
+                  ? '#ccf6e9'
+                  : '#f9b3b1',
+            }}
           >
-            {loading
-              ? '...'
-              : `${data?.trackedDebris?.percentageChange?.toFixed(2) ?? '0.00'}% ${
-                  (data?.trackedDebris?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
-                }`}
-          </p>
-        </div>
+            <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Tracked Debris</h3>
+            <p className="text-3xl font-bold" style={{ color: 'black' }}>
+              {loading ? '...' : (data?.trackedDebris?.count ?? 0).toLocaleString()}
+            </p>
+            <p
+              className={`text-sm ${
+                data?.trackedDebris?.percentageChange === 0
+                  ? 'text-green-600'
+                  : (data?.trackedDebris?.percentageChange ?? 0) > 0
+                  ? 'text-green-600'
+                  : 'text-red-600'
+              }`}
+            >
+              {loading
+                ? '...'
+                : `${data?.trackedDebris?.percentageChange?.toFixed(2) ?? '0.00'}% ${
+                    (data?.trackedDebris?.percentageChange ?? 0) >= 0 ? '▲' : '▼'
+                  }`}
+            </p>
+          </div>
+
           <div
             className="p-4 rounded shadow"
             style={{
@@ -260,8 +432,8 @@ const DashboardModule: React.FC = () => {
                   : '#f9b3b1',
             }}
           >
-             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Active Satellites</h3>
-             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Active Satellites</h3>
+            <p className="text-3xl font-bold" style={{ color: 'black' }}>
               {loading ? '...' : (data?.activeSatellites?.count ?? 0).toLocaleString()}
             </p>
             <p
@@ -280,6 +452,7 @@ const DashboardModule: React.FC = () => {
                   }`}
             </p>
           </div>
+
           <div
             className="p-4 rounded shadow"
             style={{
@@ -291,8 +464,8 @@ const DashboardModule: React.FC = () => {
                   : '#f9b3b1',
             }}
           >
-             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Rocket Bodies</h3>
-             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Rocket Bodies</h3>
+            <p className="text-3xl font-bold" style={{ color: 'black' }}>
               {loading ? '...' : (data?.rocketBodies?.count ?? 0).toLocaleString()}
             </p>
             <p
@@ -311,6 +484,7 @@ const DashboardModule: React.FC = () => {
                   }`}
             </p>
           </div>
+
           <div
             className="p-4 rounded shadow"
             style={{
@@ -322,8 +496,8 @@ const DashboardModule: React.FC = () => {
                   : '#f9b3b1',
             }}
           >
-             <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Total Tracked Objects</h3>
-             <p className="text-3xl font-bold" style={{ color: 'black' }}>
+            <h3 className="text-lg font-semibold" style={{ color: 'black' }}>Total Tracked Objects</h3>
+            <p className="text-3xl font-bold" style={{ color: 'black' }}>
               {loading ? '...' : (data?.totalTracked?.count ?? 0).toLocaleString()}
             </p>
             <p
@@ -343,92 +517,170 @@ const DashboardModule: React.FC = () => {
             </p>
           </div>
         </div>
-
-         {/* Charts */}
+        {/* Charts */}
         <div className="grid grid-cols-3 gap-6">
           {/* Total Objects Chart */}
           <div className="col-span-2 bg-[#1f1f24] p-6 rounded shadow">
-          <h3 className="text-xl font-bold text-white">Total Launches</h3>
-          <p className="text-sm text-gray-400">
-            {`${currentYear} vs. ${lastYear}`}
-          </p>
-          <div
-            className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
-            style={{ height: '300px' }}
-          >
-            <ResponsiveContainer width="95%" height={250}>
-              <LineChart data={lineChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#c0c0df" 
-                  tickFormatter={(month) => month} 
-                />
-                <YAxis stroke="#c0c0df" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1f1f24',
-                    borderColor: '#36a2eb',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                  }}
-                  itemStyle={{
-                    color: '#ffffff',
-                  }}
-                />
-                <Legend
-                  formatter={(value) =>
-                    value === 'thisYear'
-                      ? `${currentYear}`
-                      : `${lastYear}`
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="thisYear"
-                  stroke="#8884d8"
-                  activeDot={{ r: 8 }}
-                />
-                <Line type="monotone" dataKey="lastYear" stroke="#82ca9d" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-          {/* Active Weather Events */}
-          <div className="bg-[#1f1f24] p-6 rounded shadow">
-            <h3 className="text-xl font-bold text-white">Active Weather Events</h3>
-            <div className="mt-4 bg-gray-700 rounded-lg p-4">
-              <ResponsiveContainer width="100%" height={295}>
-                <div className="space-y-4">
-                  {activeWeatherEventsData.map((event, index) => (
-                    <div key={index} className="flex justify-between text-lg text-white">
-                      <span>{event.type}</span>
-                      <span
-                        className="text-lg font-semibold px-2 py-1 rounded"
-                        style={{ backgroundColor: event.color }}
-                      >
-                        {event.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            <h3 className="text-xl font-bold text-white">Total Launches</h3>
+            <p className="text-sm text-gray-400">
+              {`${currentYear} vs. ${lastYear}`}
+            </p>
+            <div
+              className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
+              style={{ height: '300px' }}
+            >
+              <ResponsiveContainer width="95%" height={250}>
+                <LineChart data={lineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#c0c0df" 
+                    tickFormatter={(month) => month} 
+                  />
+                  <YAxis stroke="#c0c0df"
+                  label={{ 
+                    value: 'Launch Count', 
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    fill: '#c0c0df',
+                    style: { textAnchor: 'middle' },
+                    offset: 1
+                  }}  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f1f24',
+                      borderColor: '#36a2eb',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                    }}
+                    itemStyle={{
+                      color: '#ffffff',
+                    }}
+                    
+                  />
+                  <Legend
+                    formatter={(value) =>
+                      value === 'thisYear'
+                        ? `${currentYear}`
+                        : `${lastYear}`
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="thisYear"
+                    stroke="#8884d8"
+                    activeDot={{ r: 8 }}
+                  />
+                  <Line type="monotone" dataKey="lastYear" stroke="#82ca9d" />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>
-        </div>
 
+          {/* Space Weather Impacts Section */}
+          <div className="bg-[#1f1f24] p-6 rounded shadow">
+            <h3 className="text-xl font-bold text-white mb-4">Space Weather Impacts</h3>
+            <div className="bg-gray-700 rounded-lg p-4">
+              {/* Solar Flares Section */}
+              <div className="mb-4">
+                <div
+                  className="cursor-pointer text-md font-semibold mb-2 text-gray-300 flex justify-between items-center"
+                  onClick={() => setCollapse(prev => ({ ...prev, solarFlares: !prev.solarFlares }))}
+                >
+                  <div className="flex items-center gap-2">
+                    <GiSunRadiations className="text-white-800" />
+                    <span>Solar Flares</span>
+                  </div>
+                  <span>{collapse.solarFlares ? '▼' : '►'}</span>
+                </div>
+                {!collapse.solarFlares && (
+                  <ul className="list-disc list-inside space-y-2">
+                    {impactsByType.solarFlares.slice(0, 2).map((impact, index) => (
+                      <li key={`solar-${index}`} className="text-sm text-gray-300">{impact}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* CMEs Section */}
+              <div className="mb-4">
+                <div
+                  className="cursor-pointer text-md font-semibold mb-2 text-gray-300 flex justify-between items-center"
+                  onClick={() => setCollapse(prev => ({ ...prev, cmes: !prev.cmes }))}
+                >
+                  <div className="flex items-center gap-2">
+                    <FiSunrise className="text-white-800" />
+                    <span>Coronal Mass Ejections</span>
+                  </div>
+                  <span>{collapse.cmes ? '▼' : '►'}</span>
+                </div>
+                {!collapse.cmes && (
+                  <ul className="list-disc list-inside space-y-2">
+                    {impactsByType.cmes.slice(0, 2).map((impact, index) => (
+                      <li key={`cme-${index}`} className="text-sm text-gray-300">{impact}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Geomagnetic Storms Section */}
+              <div>
+                <div
+                  className="cursor-pointer text-md font-semibold mb-2 text-gray-300 flex justify-between items-center"
+                  onClick={() => setCollapse(prev => ({ ...prev, geostorms: !prev.geostorms }))}
+                >
+                  <div className="flex items-center gap-2">
+                    <TbSunElectricity className="text-white-800" />
+                    <span>Geomagnetic Storms</span>
+                  </div>
+                  <span>{collapse.geostorms ? '▼' : '►'}</span>
+                </div>
+                {!collapse.geostorms && (
+                  <ul className="list-disc list-inside space-y-2">
+                    {impactsByType.geostorms.slice(0, 2).map((impact, index) => (
+                      <li key={`storm-${index}`} className="text-sm text-gray-300">{impact}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Bottom Charts */}
         <div className="grid grid-cols-2 gap-6">
-          {/* Environmental Risk by Day */}
+          {/* Environmental Risk by Region */}
           <div className="bg-[#1f1f24] p-6 rounded shadow">
-            <h3 className="text-xl font-bold text-white">Environmental Risk by Day</h3>
+            <h3 className="text-xl font-bold text-white">Environmental Risk by Region</h3>
             <div className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center" style={{ height: '300px' }}>
               <ResponsiveContainer width="95%" height={250}>
-                <BarChart data={barChartData}>
+                <BarChart data={environmentalRiskData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="day" stroke="#c0c0df" />
-                  <YAxis domain={[0, 10]} stroke="#c0c0df" />
+                  <XAxis 
+                    dataKey="region" 
+                    stroke="#c0c0df"
+                    tick={{ fill: '#c0c0df' }}
+                    label={{ 
+                      value: 'Regions', 
+                      angle: 0, 
+                      position: 'insideBottom', 
+                      fill: '#c0c0df',
+                      style: { textAnchor: 'middle' },
+                      offset: -5
+                    }} 
+                  />
+                  <YAxis 
+                    domain={[0, 10]} 
+                    stroke="#c0c0df"
+                    tick={{ fill: '#c0c0df' }}
+                    label={{ 
+                      value: 'Environmental Score (0.0-10.0)', 
+                      angle: -90, 
+                      position: 'insideLeft', 
+                      fill: '#c0c0df',
+                      style: { textAnchor: 'middle' },
+                      offset: 1
+                    }} 
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#1f1f24',
@@ -439,111 +691,222 @@ const DashboardModule: React.FC = () => {
                     itemStyle={{
                       color: '#ffffff'
                     }}
+                    formatter={(value: any) => {
+                      if (typeof value === 'number') {
+                        return value.toFixed(2);
+                      }
+                      return value;
+                    }}
+                    labelFormatter={(region) => `Region ${region}`}
                   />
-                  <Bar dataKey="score" fill="#36a2eb" radius={[10, 10, 0, 0]} />
+                  <Bar 
+                    dataKey="risk_score" 
+                    fill="#36a2eb" 
+                    radius={[10, 10, 0, 0]}
+                    name="Risk Score"
+                  >
+                    {environmentalRiskData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.risk_score >= 7 ? '#ef4444' : 
+                              entry.risk_score >= 4 ? '#f59e0b' : 
+                              '#22c55e'}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Risk by Type */}
+          {/* Satellites by Country Chart */}
           <div className="bg-[#1f1f24] p-6 rounded shadow">
-            <h3 className="text-xl font-bold text-white">Risk by Type</h3>
-            <div className="mt-4 flex items-center bg-gray-700 rounded-lg p-4">
-              <div className="w-1/2">
-                <ResponsiveContainer width="100%" height={270}>
-                  <PieChart>
+            <h3 className="text-xl font-bold text-white">Satellites by Country</h3>
+            <div
+              className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
+              style={{ height: '300px' }}
+            >
+              {loading ? (
+                <p className="text-white">Loading...</p>
+              ) : error ? (
+                <p className="text-red-500">{error}</p>
+              ) : (
+                <ResponsiveContainer width="95%" height={250}>
+                  <BarChart data={satellitesByOwnerData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="country" stroke="#c0c0df"
+                    label={{ 
+                        value: 'Country', 
+                        angle: 0, 
+                        position: 'insideBottom', 
+                        fill: '#c0c0df',
+                        style: { textAnchor: 'middle' },
+                        offset: -5
+                      }} />
+                    <YAxis
+                      stroke="#c0c0df"
+                      scale="log"
+                      domain={[1, 'auto']}
+                      allowDataOverflow={true}
+                      tickFormatter={(value) => value.toLocaleString()}
+                      label={{ 
+                        value: 'Satellite Count', 
+                        angle: -90, 
+                        position: 'insideLeft', 
+                        fill: '#c0c0df',
+                        style: { textAnchor: 'middle' },
+                        offset: 0  
+                      }}
+                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: '#1f1f24',
                         borderColor: '#36a2eb',
                         borderRadius: '8px',
-                        color: '#ffffff'
+                        color: '#ffffff',
                       }}
                       itemStyle={{
-                        color: '#ffffff'
+                        color: '#ffffff',
                       }}
+                      formatter={(value: number) => value.toLocaleString()}
                     />
-                    <Pie
-                      data={pieChartData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      label
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
+                    <Bar
+                      dataKey="active_payload_count"
+                      fill="#36a2eb"
+                      radius={[10, 10, 0, 0]}
+                    />
+                  </BarChart>
                 </ResponsiveContainer>
-              </div>
-              <div className="w-1/2 pl-4">
-                {pieChartData.map((entry, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: entry.color }}
-                    ></div>
-                    <span className="text-lg text-white">{entry.name}</span>
-                    <span className="text-lg text-gray-400 ml-auto">{entry.value}%</span>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           </div>
         </div>
+           {/* NEO Stats - New Section */}
+        <div className="mt-6">
+          <h3 className="text-xl font-bold text-white mb-4">Near Earth Objects Overview (Past 7 Days)</h3>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="bg-[#1f1f24] p-4 rounded shadow">
+              <h3 className="text-lg font-semibold text-gray-300">Total NEOs</h3>
+              <p className="text-3xl font-bold text-white">
+                {neoLoading ? '...' : totalNEOs}
+              </p>
+            </div>
 
-        {/* Satellites by Country Chart */}
-        <div className="bg-[#1f1f24] p-6 rounded shadow mt-6">
-          <h3 className="text-xl font-bold text-white">Satellites by Country</h3>
-          <div
-            className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center"
-            style={{ height: '300px' }}
-          >
-            {loading ? (
-              <p className="text-white">Loading...</p>
-            ) : error ? (
-              <p className="text-red-500">{error}</p>
+            <div className="bg-[#1f1f24] p-4 rounded shadow">
+              <h3 className="text-lg font-semibold text-gray-300">Potentially Hazardous</h3>
+              <div className="flex items-center">
+                <p className="text-3xl font-bold" style={{ color: hazardousCount > 0 ? '#f97316' : 'white' }}>
+                  {neoLoading ? '...' : hazardousCount}
+                </p>
+                {hazardousCount > 0 && <AlertTriangle className="ml-2 text-orange-500" />}
+              </div>
+            </div>
+
+            <div className="bg-[#1f1f24] p-4 rounded shadow">
+              <h3 className="text-lg font-semibold text-gray-300">Average Diameter</h3>
+              <p className="text-3xl font-bold text-white">
+                {neoLoading ? '...' : (averageDiameter).toFixed(2)}
+                <span className="text-sm text-gray-400 ml-1">km</span>
+              </p>
+            </div>
+
+            <div className="bg-[#1f1f24] p-4 rounded shadow">
+              <h3 className="text-lg font-semibold text-gray-300">Closest Approach</h3>
+              <p className="text-3xl font-bold text-white">
+                {neoLoading ? '...' : new Intl.NumberFormat('en-US', { 
+                  maximumFractionDigits: 2 
+                }).format(closestApproach)}
+                <span className="text-sm text-gray-400 ml-1">km</span>
+              </p>
+            </div>
+          </div>
+        
+
+        {/* NEO Approaches Chart - New Section */}
+        <div className="bg-[#1f1f24] p-6 rounded shadow mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-white">NEO Approaches (Past 7 Days)</h3>
+            {neoLoading && <p className="text-sm text-gray-400">Loading...</p>}
+          </div>
+          <div className="mt-4 bg-gray-700 rounded-lg flex items-center justify-center" style={{ height: '300px' }}>
+            {neoLoading ? (
+              <p className="text-white">Loading data...</p>
+            ) : approachData.length === 0 ? (
+              <p className="text-gray-400">No approach data available</p>
             ) : (
               <ResponsiveContainer width="95%" height={250}>
-                <BarChart data={satellitesByOwnerData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="country" stroke="#c0c0df" />
-                  {/* Apply a logarithmic scale for the Y-axis */}
-                  <YAxis
+                <LineChart data={approachData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" opacity={0.5} />
+                  <XAxis 
+                    dataKey="close_approach_date" 
                     stroke="#c0c0df"
-                    scale="log" // Use logarithmic scale
-                    domain={[1, 'auto']} // Start at 1 to avoid log(0)
-                    allowDataOverflow={true} // Ensure all bars fit within the chart
-                    tickFormatter={(value) => value.toLocaleString()} // Format ticks for better readability
+                    tick={{ fill: '#c0c0df' }}
+                    tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                    label={{ 
+                      value: 'Date', 
+                      angle: 0, 
+                      position: 'insideBottom', 
+                      fill: '#c0c0df',
+                      style: { textAnchor: 'middle' },
+                      offset: -5  
+                    }}
+                    interval="preserveStartEnd"
+                    minTickGap={200}
+                  />
+                  <YAxis 
+                    stroke="#c0c0df"
+                    tick={{ fill: '#c0c0df' }}
+                    tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                    label={{ 
+                      value: 'Distance (millions km)', 
+                      angle: -90, 
+                      position: 'insideLeft', 
+                      fill: '#c0c0df',
+                      style: { textAnchor: 'middle' },
+                      offset: 0  
+                    }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#1f1f24',
                       borderColor: '#36a2eb',
                       borderRadius: '8px',
-                      color: '#ffffff',
+                      color: '#ffffff'
                     }}
-                    itemStyle={{
-                      color: '#ffffff',
-                    }}
-                    formatter={(value: number) => value.toLocaleString()} // Format values
+                    labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                    formatter={(value: any) => [
+                      `${(value / 1000000).toFixed(2)}M km`,
+                      "Miss Distance"
+                    ]}
                   />
-                  <Bar
-                    dataKey="active_payload_count"
-                    fill="#36a2eb"
-                    radius={[10, 10, 0, 0]}
+                  <Line 
+                    type="monotone" 
+                    dataKey="miss_distance_km" 
+                    stroke="#36a2eb" 
+                    strokeWidth={1.5}
+                    name="Miss Distance"
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#ffffff' }}
                   />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             )}
           </div>
+          
+          {approachData.length > 0 && (
+            <div className="mt-4 text-sm text-gray-400">
+              <p>
+                Closest approach: {(closestApproach / 1000000).toFixed(2)}M km on {
+                  new Date(approachData.find(a => a.miss_distance_km === closestApproach)?.close_approach_date || '')
+                    .toLocaleDateString()
+                }
+              </p>
+            </div>
+          )}
         </div>
+        </div>
+
+        {/* Closing tags for the wrapper divs */}
       </div>
     </>
   );

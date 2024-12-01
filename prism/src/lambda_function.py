@@ -365,6 +365,100 @@ class HighSpeedStreamAPI:
                 
         return sanitized_data
 
+class NASAExoplanetAPI:
+    """NASA Exoplanet Archive API implementation."""
+
+    def __init__(self):
+        self.base_url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+
+    async def fetch_data(self, session: aiohttp.ClientSession) -> List[Dict[str, Any]]:
+        """
+        Fetch Exoplanet data asynchronously.
+        """
+        # Updated query to include more fields
+        query = """
+        SELECT 
+            pl_name, hostname, discoverymethod, pl_orbper, 
+            pl_rade, pl_bmassj, pl_orbsmax, disc_year,
+            pl_orbeccen, pl_insol, pl_eqt, pl_density,
+            st_teff, st_rad, st_mass, st_met,
+            pl_facilityname, pl_telescope, pl_instrument,
+            rastr, decstr, pl_controv_flag, pl_refname
+        FROM pscomppars
+        """
+        params = {
+            'query': query,
+            'format': 'json'
+        }
+
+        try:
+            async with session.get(self.base_url, params=params) as response:
+                response.raise_for_status()
+                if 'application/json' in response.headers.get('Content-Type', ''):
+                    data = await response.json()
+                    logger.info("Fetched Exoplanet data successfully.")
+                    return data
+                else:
+                    raise ValueError(f"Unexpected content type: {response.headers.get('Content-Type')}.")
+        except Exception as e:
+            logger.error(f"Error fetching Exoplanet data: {str(e)}")
+            raise
+
+    def sanitize_data(self, raw_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Sanitize and transform Exoplanet data.
+        """
+        sanitized_data = []
+        try:
+            for item in raw_data:
+                sanitized_exoplanet = {
+                    'planet_name': item.get('pl_name', '').strip(),
+                    'host_star': item.get('hostname', '').strip(),
+                    'discovery_method': item.get('discoverymethod', '').strip(),
+                    'orbital_period': self._safe_float(item.get('pl_orbper')),
+                    'planet_radius': self._safe_float(item.get('pl_rade')),
+                    'mass': self._safe_float(item.get('pl_bmassj')),
+                    'semi_major_axis': self._safe_float(item.get('pl_orbsmax')),
+                    'discovery_year': self._safe_int(item.get('disc_year')),
+                    'orbital_eccentricity': self._safe_float(item.get('pl_orbeccen')),
+                    'insolation_flux': self._safe_float(item.get('pl_insol')),
+                    'equilibrium_temp': self._safe_float(item.get('pl_eqt')),
+                    'density': self._safe_float(item.get('pl_density')),
+                    'star_temp': self._safe_float(item.get('st_teff')),
+                    'star_radius': self._safe_float(item.get('st_rad')),
+                    'star_mass': self._safe_float(item.get('st_mass')),
+                    'star_metallicity': self._safe_float(item.get('st_met')),
+                    'facility': item.get('pl_facilityname', '').strip(),
+                    'telescope': item.get('pl_telescope', '').strip(),
+                    'instrument': item.get('pl_instrument', '').strip(),
+                    'ra_str': item.get('rastr', '').strip(),
+                    'dec_str': item.get('decstr', '').strip(),
+                    'controversial': bool(item.get('pl_controv_flag')),
+                    'reference': item.get('pl_refname', '').strip()
+                }
+                sanitized_data.append(sanitized_exoplanet)
+        except Exception as e:
+            logger.error(f"Error sanitizing Exoplanet data: {str(e)}")
+            raise
+        return sanitized_data
+
+    @staticmethod
+    def _safe_float(value: Any) -> float:
+        """Safely convert a value to float."""
+        try:
+            return float(value) if value is not None else None
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _safe_int(value: Any) -> int:
+        """Safely convert a value to int."""
+        try:
+            return int(value) if value is not None else None
+        except ValueError:
+            return None
+
+
 class SpaceTrackAPI:
     """Space-Track.org API implementation"""
     def __init__(self):
@@ -557,6 +651,34 @@ class DatabaseConnection:
             hss_id VARCHAR(50) REFERENCES donki_hss(hss_id),
             instrument_name VARCHAR(100),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS exoplanets (
+            planet_name VARCHAR(255) UNIQUE NOT NULL,
+            host_star VARCHAR(255),
+            discovery_method VARCHAR(255),
+            orbital_period DOUBLE PRECISION,
+            planet_radius DOUBLE PRECISION,
+            mass DOUBLE PRECISION,
+            semi_major_axis DOUBLE PRECISION,
+            discovery_year INTEGER,
+            orbital_eccentricity DOUBLE PRECISION,
+            insolation_flux DOUBLE PRECISION,
+            equilibrium_temp DOUBLE PRECISION,
+            density DOUBLE PRECISION,
+            star_temp DOUBLE PRECISION,
+            star_radius DOUBLE PRECISION,
+            star_mass DOUBLE PRECISION,
+            star_metallicity DOUBLE PRECISION,
+            facility VARCHAR(255),
+            telescope VARCHAR(255),
+            instrument VARCHAR(255),
+            ra_str VARCHAR(50),
+            dec_str VARCHAR(50),
+            controversial BOOLEAN,
+            reference TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS linked_events (
@@ -969,7 +1091,82 @@ async def process_hss_data(pool, api, date=None):
         except Exception as e:
             logger.error(f"Error inserting HSS data: {e}")
             raise
-        
+
+async def process_exoplanet_data(pool, api):
+    """Process Exoplanet Archive data."""
+    async with aiohttp.ClientSession() as session:
+        raw_data = await api.fetch_data(session)
+        processed_data = api.sanitize_data(raw_data)
+
+    insert_exoplanet_query = """
+        INSERT INTO exoplanets (
+            planet_name, host_star, discovery_method, orbital_period, 
+            planet_radius, mass, semi_major_axis, discovery_year,
+            orbital_eccentricity, insolation_flux, equilibrium_temp, density,
+            star_temp, star_radius, star_mass, star_metallicity,
+            facility, telescope, instrument, ra_str, dec_str,
+            controversial, reference
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+            $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+        )
+        ON CONFLICT (planet_name) DO UPDATE SET
+            host_star = EXCLUDED.host_star,
+            discovery_method = EXCLUDED.discovery_method,
+            orbital_period = EXCLUDED.orbital_period,
+            planet_radius = EXCLUDED.planet_radius,
+            mass = EXCLUDED.mass,
+            semi_major_axis = EXCLUDED.semi_major_axis,
+            discovery_year = EXCLUDED.discovery_year,
+            orbital_eccentricity = EXCLUDED.orbital_eccentricity,
+            insolation_flux = EXCLUDED.insolation_flux,
+            equilibrium_temp = EXCLUDED.equilibrium_temp,
+            density = EXCLUDED.density,
+            star_temp = EXCLUDED.star_temp,
+            star_radius = EXCLUDED.star_radius,
+            star_mass = EXCLUDED.star_mass,
+            star_metallicity = EXCLUDED.star_metallicity,
+            facility = EXCLUDED.facility,
+            telescope = EXCLUDED.telescope,
+            instrument = EXCLUDED.instrument,
+            ra_str = EXCLUDED.ra_str,
+            dec_str = EXCLUDED.dec_str,
+            controversial = EXCLUDED.controversial,
+            reference = EXCLUDED.reference;
+    """
+
+    async with pool.acquire() as connection:
+        async with connection.transaction():
+           await connection.executemany(insert_exoplanet_query, [
+                (
+                    item['planet_name'],
+                    item['host_star'],
+                    item['discovery_method'],
+                    item['orbital_period'],
+                    item['planet_radius'],
+                    item['mass'],
+                    item['semi_major_axis'],
+                    item['discovery_year'],
+                    item['orbital_eccentricity'],
+                    item['insolation_flux'],
+                    item['equilibrium_temp'],
+                    item['density'],
+                    item['star_temp'],
+                    item['star_radius'],
+                    item['star_mass'],
+                    item['star_metallicity'],
+                    item['facility'],
+                    item['telescope'],
+                    item['instrument'],
+                    item['ra_str'],
+                    item['dec_str'],
+                    item['controversial'],
+                    item['reference']
+                )
+                for item in processed_data
+            ])
+    logger.info(f"Inserted/Updated {len(processed_data)} exoplanet records.")
+  
 async def process_satellite_data(pool, api):
     """Process satellite catalog data"""
     async with aiohttp.ClientSession() as session:
@@ -1186,6 +1383,7 @@ async def main():
         solar_flare_api = SolarFlareAPI()
         hss_api = HighSpeedStreamAPI()
         space_track_api = SpaceTrackAPI()
+        exoplanet_api = NASAExoplanetAPI()
 
         try:
             await db_conn.setup_database(db_pool)
@@ -1197,7 +1395,8 @@ async def main():
                 asyncio.create_task(process_gp_data(db_pool, space_track_api)),
                 asyncio.create_task(process_geostorm_data(db_pool, geostorm_api, None)),
                 asyncio.create_task(process_solar_flare_data(db_pool, solar_flare_api, None)),
-                asyncio.create_task(process_hss_data(db_pool, hss_api, None))
+                asyncio.create_task(process_hss_data(db_pool, hss_api, None)),
+                asyncio.create_task(process_exoplanet_data(db_pool, exoplanet_api))
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -1212,11 +1411,9 @@ async def main():
                 'message': 'Successfully processed all data',
                 'timestamp': datetime.now().isoformat()
             }
-            
         finally:
             await db_pool.close()
             logger.info("Database connection closed")
-            
     except Exception as e:
         logger.error(f"Error in main execution: {str(e)}")
         return {

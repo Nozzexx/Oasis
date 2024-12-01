@@ -44,7 +44,7 @@ export async function POST(request: Request) {
         fontSize: 8,
         cellPadding: 2,
         overflow: 'linebreak',
-        cellWidth: 'wrap'
+        cellWidth: 'auto'
       },
       headStyles: {
         fillColor: [66, 66, 66],
