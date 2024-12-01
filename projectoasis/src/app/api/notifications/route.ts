@@ -6,7 +6,10 @@ import { NextRequest } from 'next/server';
 import pool from '@/utils/db';
 
 export async function GET(request: NextRequest) {
+  let client;
   try {
+    client = await pool.connect();
+
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '100');
     const read = searchParams.get('read');
@@ -38,7 +41,7 @@ export async function GET(request: NextRequest) {
       queryParams.push(limit);
     }
 
-    const result = await pool.query(query, queryParams);
+    const result = await client.query(query, queryParams);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -49,11 +52,16 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }
 
 export async function POST(request: NextRequest) {
+  let client;
   try {
+    client = await pool.connect();
+
     const data = await request.json();
     
     const query = `
@@ -66,7 +74,7 @@ export async function POST(request: NextRequest) {
       RETURNING *
     `;
 
-    const result = await pool.query(query, [
+    const result = await client.query(query, [
       data.title,
       data.body,
       data.notification_type || 'general',
@@ -86,12 +94,17 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }
 
 // Update notification read status
 export async function PATCH(request: NextRequest) {
+  let client;
   try {
+    client = await pool.connect();
+
     const data = await request.json();
     
     const query = `
@@ -101,7 +114,7 @@ export async function PATCH(request: NextRequest) {
       RETURNING *
     `;
 
-    const result = await pool.query(query, [true, data.id]);
+    const result = await client.query(query, [true, data.id]);
 
     return NextResponse.json({
       success: true,
@@ -116,5 +129,7 @@ export async function PATCH(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    if (client) client.release();
   }
 }

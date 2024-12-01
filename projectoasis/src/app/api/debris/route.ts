@@ -21,6 +21,7 @@ interface SpaceObject {
   decay_date: string | null;
 }
 
+// GET handler to fetch space object data
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -43,28 +44,25 @@ export async function GET(request: NextRequest) {
         gp.country_code,
         gp.launch_date,
         gp.decay_date,
-        -- Calculate approximate position based on orbital elements
         gp.mean_anomaly::float as current_anomaly,
         gp.mean_motion_dot::float as motion_change,
         gp.ra_of_asc_node::float as right_ascension,
         gp.arg_of_pericenter::float as argument_periapsis
       FROM gp
       WHERE updated_at >= NOW() - interval '${timeframe} hours'
-        AND (gp.decay_date IS NULL OR gp.decay_date > CURRENT_DATE) -- Added filter for active objects
+        AND (gp.decay_date IS NULL OR gp.decay_date > CURRENT_DATE)
     `;
 
+    const queryParams: (string | number)[] = [];
     if (objectType !== 'ALL') {
       query += ` AND object_type = $1`;
+      queryParams.push(objectType);
     }
 
-    const result = await pool.query(
-      query,
-      objectType !== 'ALL' ? [objectType] : []
-    );
+    const result = await pool.query(query, queryParams);
 
     // Process results and calculate positions
     const spaceObjects = result.rows.map(row => {
-      // Convert orbital elements to Cartesian coordinates
       const position = calculatePosition(
         row.semimajor_axis,
         row.eccentricity,
@@ -81,45 +79,44 @@ export async function GET(request: NextRequest) {
         position: {
           x: position.x,
           y: position.y,
-          z: position.z
+          z: position.z,
         },
         orbit: {
           semimajorAxis: row.semimajor_axis,
           eccentricity: row.eccentricity,
           inclination: row.inclination,
-          period: row.period
+          period: row.period,
         },
         metadata: {
           country: row.country_code,
           rcsSize: row.rcs_size,
           launchDate: row.launch_date,
-          decayDate: row.decay_date
-        }
+          decayDate: row.decay_date,
+        },
       };
     });
 
     return NextResponse.json({
-        success: true,
-        data: spaceObjects,
-        metadata: {
-          total: spaceObjects.length,
-          timeframe,
-          lastUpdate: new Date().toISOString(),
-          objectTypes: {
-            PAYLOAD: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'PAYLOAD').length,
-            DEBRIS: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'DEBRIS').length,
-            ROCKET_BODY: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'ROCKET BODY').length
-          }
-        }
-      });
-
+      success: true,
+      data: spaceObjects,
+      metadata: {
+        total: spaceObjects.length,
+        timeframe,
+        lastUpdate: new Date().toISOString(),
+        objectTypes: {
+          PAYLOAD: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'PAYLOAD').length,
+          DEBRIS: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'DEBRIS').length,
+          ROCKET_BODY: spaceObjects.filter(obj => obj.type.trim().toUpperCase() === 'ROCKET BODY').length,
+        },
+      },
+    });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         message: 'Failed to fetch space objects data',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -135,20 +132,17 @@ function calculatePosition(
   argumentPeriapsis: number,
   meanAnomaly: number
 ): { x: number; y: number; z: number } {
-  // Convert degrees to radians
-  const toRadians = (deg: number) => deg * Math.PI / 180;
-  
+  const toRadians = (deg: number) => (deg * Math.PI) / 180;
+
   // Solve Kepler's equation for eccentric anomaly
   let E = meanAnomaly;
   for (let i = 0; i < 10; i++) {
     E = meanAnomaly + eccentricity * Math.sin(E);
   }
 
-  // Calculate position in orbital plane
   const x = semiMajorAxis * (Math.cos(E) - eccentricity);
-  const y = semiMajorAxis * Math.sqrt(1 - eccentricity * eccentricity) * Math.sin(E);
+  const y = semiMajorAxis * Math.sqrt(1 - eccentricity ** 2) * Math.sin(E);
 
-  // Rotate to correct orbital orientation
   const cosI = Math.cos(toRadians(inclination));
   const sinI = Math.sin(toRadians(inclination));
   const cosO = Math.cos(toRadians(rightAscension));
@@ -159,6 +153,6 @@ function calculatePosition(
   return {
     x: x * (cosO * cosw - sinO * sinw * cosI) - y * (cosO * sinw + sinO * cosw * cosI),
     y: x * (sinO * cosw + cosO * sinw * cosI) + y * (cosO * cosw * cosI - sinO * sinw),
-    z: x * sinw * sinI + y * cosw * sinI
+    z: x * sinw * sinI + y * cosw * sinI,
   };
 }

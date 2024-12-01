@@ -23,72 +23,56 @@ export interface ExoplanetData {
   reference?: string;
 }
 
-// Types for Export PDF API
-export interface ExportPDFRequest {
-  table: string;
-  data: Record<string, unknown>[];
-  columns: string[];
-}
-
-export interface TableData {
-  data: Record<string, unknown>[];
-  columns: string[];
-}
-
-// Types for API Responses
-export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-// Types for Chart Data
-export interface ChartDataPoint {
-  label: string;
-  value: number;
-  metadata?: Record<string, unknown>;
-}
-
-export type ChartData = ChartDataPoint[];
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+
+    // Extract and parse query parameters
     const discoveryMethod = searchParams.get('discoveryMethod');
     const minRadius = searchParams.get('minRadius');
     const maxRadius = searchParams.get('maxRadius');
 
+    // Construct SQL query with filters
     let query = `
-      SELECT planet_name, host_star, discovery_method, 
-             orbital_period, planet_radius, mass, semi_major_axis
+      SELECT 
+        planet_name, 
+        host_star, 
+        discovery_method, 
+        orbital_period, 
+        planet_radius, 
+        mass, 
+        semi_major_axis
       FROM public.exoplanets
       WHERE 1=1
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
+    // Apply filters based on query parameters
     if (discoveryMethod) {
       params.push(discoveryMethod);
       query += ` AND discovery_method = $${params.length}`;
     }
-
     if (minRadius) {
       params.push(parseFloat(minRadius));
       query += ` AND planet_radius >= $${params.length}`;
     }
-
     if (maxRadius) {
       params.push(parseFloat(maxRadius));
       query += ` AND planet_radius <= $${params.length}`;
     }
 
+    // Add sorting by planet radius
     query += ' ORDER BY planet_radius DESC';
 
+    // Execute the query with parameters
     const result = await pool.query(query, params);
 
+    // Return the fetched rows as a JSON response
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching Exoplanet data:', error);
+
+    // Return a generic error response
     return NextResponse.json(
       { error: 'Failed to fetch Exoplanet data' },
       { status: 500 }

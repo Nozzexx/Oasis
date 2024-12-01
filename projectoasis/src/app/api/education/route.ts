@@ -7,27 +7,45 @@ import pool from '@/utils/db';
 
 export async function GET(request: NextRequest) {
   try {
+    // Query to fetch space weather topics
     const result = await pool.query(`
-      SELECT id, title, short_description, detailed_content, icon_name, created_at, updated_at
+      SELECT 
+        id, 
+        title, 
+        short_description, 
+        detailed_content, 
+        icon_name, 
+        created_at, 
+        updated_at
       FROM space_weather_topics
       WHERE icon_name IS NOT NULL
       ORDER BY display_order
     `);
 
+    // Format data to match expected structure
     const educationItems = result.rows.map((item) => ({
       id: item.id,
       title: item.title,
       details: item.short_description,
       fullDetails: item.detailed_content,
       time: formatTimeDifference(item.created_at),
-      icon: item.icon_name, // Return the actual icon name
+      icon: item.icon_name, // Return the icon name directly
     }));
 
-    return NextResponse.json(educationItems);
+    // Respond with formatted data
+    return NextResponse.json({
+      success: true,
+      data: educationItems,
+    });
   } catch (error) {
     console.error('Error fetching education data:', error);
+
     return NextResponse.json(
-      { error: 'Failed to fetch education data' },
+      {
+        success: false,
+        error: 'Failed to fetch education data',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

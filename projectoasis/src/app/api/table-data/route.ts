@@ -6,6 +6,7 @@ import { NextRequest } from 'next/server';
 import pool from '@/utils/db';
 
 export async function GET(request: NextRequest) {
+  let client;
   try {
     const searchParams = request.nextUrl.searchParams;
     const table = searchParams.get('table');
@@ -34,6 +35,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get a client from the pool
+    client = await pool.connect();
+
     // Get column information
     const columnQuery = `
       SELECT column_name, data_type
@@ -41,7 +45,7 @@ export async function GET(request: NextRequest) {
       WHERE table_name = $1
       ORDER BY ordinal_position;
     `;
-    const columnResult = await pool.query(columnQuery, [table]);
+    const columnResult = await client.query(columnQuery, [table]);
     const columns = columnResult.rows.map(row => row.column_name);
 
     // Get table data with pagination
@@ -50,7 +54,7 @@ export async function GET(request: NextRequest) {
       FROM ${table}
       LIMIT 1000;
     `;
-    const dataResult = await pool.query(dataQuery);
+    const dataResult = await client.query(dataQuery);
 
     return NextResponse.json({
       success: true,
@@ -68,5 +72,10 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    // Release the client back to the pool
+    if (client) {
+      client.release();
+    }
   }
 }

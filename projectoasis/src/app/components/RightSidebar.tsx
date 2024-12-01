@@ -306,17 +306,31 @@ export default function RightSidebar({ collapsed, toggleCollapse, handleNotifica
               </div>
               {isEducationOpen && (
                 <ul className="mt-2 space-y-2">
-                  {(viewAllEducation ? education : education.slice(0, 4)).map((item) => (
-                    <li key={item.id} className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]" onClick={() => handleItemClick(item)}>
-                      <span className="flex-shrink-0">{getIconComponent(item.icon)}</span>
-                      <div className="flex-grow">
-                        <h3 className="text-sm text-white font-semibold truncate">{item.title}</h3>
-                        <p className="text-xs text-gray-400">{item.time}</p>
-                      </div>
-                    </li>
-                  ))}
-                  {education.length > 4 && (
-                    <div className="text-xs text-blue-400 cursor-pointer hover:underline" onClick={() => setViewAllEducation(!viewAllEducation)}>
+                  {/* Check if education is an array and map over it */}
+                  {Array.isArray(education) && education.length > 0 ? (
+                    (viewAllEducation ? education : education.slice(0, 4)).map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center space-x-2 p-2 bg-[#222222] rounded cursor-pointer hover:bg-[#333]"
+                        onClick={() => handleItemClick(item)}
+                      >
+                        <span className="flex-shrink-0">{getIconComponent(item.icon)}</span>
+                        <div className="flex-grow">
+                          <h3 className="text-sm text-white font-semibold truncate">{item.title}</h3>
+                          <p className="text-xs text-gray-400">{item.time}</p>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    // Fallback message for empty or invalid data
+                    <p className="text-gray-400">No education items available.</p>
+                  )}
+                  {/* Toggle "View All" or "View Less" if more than 4 items exist */}
+                  {Array.isArray(education) && education.length > 4 && (
+                    <div
+                      className="text-xs text-blue-400 cursor-pointer hover:underline"
+                      onClick={() => setViewAllEducation(!viewAllEducation)}
+                    >
                       {viewAllEducation ? 'View Less' : 'View All'}
                     </div>
                   )}
