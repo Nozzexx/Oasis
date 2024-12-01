@@ -30,7 +30,14 @@ export default function Page() {
         >
           {/* Render modules */}
           <DashboardModule />
+          <DataDisplayModule />
+          <NearEarthObjectsModule />
+          <OrbitalRegionsModule />
+          <SpaceWeatherModule />
+          <RiskAssessmentModule />
+          <SatelliteStatusModule />
           
+          <ExoplanetModule />
         </div>
       </main>
     </DashboardLayout>
