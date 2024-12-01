@@ -15,7 +15,7 @@ export default function Page() {
   return (
     <DashboardLayout>
       <main className="flex-1 overflow-y-auto bg-[#1c1c1c] relative">
-        <div 
+        <div
           style={{
             opacity: 0.8,
             backgroundImage: `
@@ -28,7 +28,16 @@ export default function Page() {
             backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
           }}
         >
-          {/* Your main content will be rendered here by the Layout component */}
+          {/* Render modules */}
+          <DashboardModule />
+          <DataDisplayModule />
+          <NearEarthObjectsModule />
+          <OrbitalRegionsModule />
+          <SpaceWeatherModule />
+          <RiskAssessmentModule />
+          <SatelliteStatusModule />
+          <DebrisTrackingModule />
+          <ExoplanetModule />
         </div>
       </main>
     </DashboardLayout>
